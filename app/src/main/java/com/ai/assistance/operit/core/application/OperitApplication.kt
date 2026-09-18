@@ -22,6 +22,7 @@ import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.R
 import com.ai.assistance.operit.core.chat.AIMessageManager
 import com.ai.assistance.operit.api.chat.AIForegroundService
+import com.ai.assistance.operit.api.publicapi.DeveloperApiRuntime
 import com.ai.assistance.operit.api.chat.library.MemoryAutoSaveScheduler
 import com.ai.assistance.operit.plugins.PluginRegistry
 import com.ai.assistance.operit.plugins.lifecycle.AppLifecycleEvent
@@ -97,6 +98,8 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
 
     // 应用级协程作用域
     private val applicationScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    lateinit var developerApiRuntime: DeveloperApiRuntime
+        private set
     private var memoryAutoSaveScheduler: MemoryAutoSaveScheduler? = null
     private val mainInitializationLock = Any()
     @Volatile
@@ -120,6 +123,7 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
         val startTime = System.currentTimeMillis()
         appStartupTimeMs = startTime
         instance = this
+        developerApiRuntime = DeveloperApiRuntime()
 
         // Workers and receivers can cold-start the process without creating an Activity.
         // Initialize process-wide preference dependencies before those entry points can run.
