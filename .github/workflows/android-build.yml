@@ -10,6 +10,7 @@ on:
         type: choice
         options:
           - assembleDebug
+          - ':app:assembleRelease'
           - ':app:assembleNightly'
           - ':app:assembleClone'
           - ':app:bundleRelease'
