@@ -195,11 +195,47 @@ jobs:
           npm run build:examples:github
           python3 tools/example_packages/sync_example_packages.py --no-hot-reload
 
+      - name: Restore Android signing material cache
+        id: signing-cache
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: signing-material
+          key: operit-android-signing-${{ runner.os }}
+
+      - name: Generate Android signing material (first run only)
+        if: steps.signing-cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p signing-material
+          SIGN_PASS="$(openssl rand -hex 16)"
+          keytool -genkeypair -v -keystore signing-material/release.jks -alias operit -keyalg RSA -keysize 2048 -validity 10000 -storepass "$SIGN_PASS" -keypass "$SIGN_PASS" -dname "CN=Operit Fork Preview, O=Operit, C=CN"
+          keytool -genkeypair -v -keystore signing-material/rotation.jks -alias operit-new -keyalg RSA -keysize 2048 -validity 10000 -storepass "$SIGN_PASS" -keypass "$SIGN_PASS" -dname "CN=Operit Fork Rotation, O=Operit, C=CN"
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" rotate --out signing-material/lineage.bin --old-signer --ks signing-material/release.jks --ks-key-alias operit --ks-pass "pass:$SIGN_PASS" --key-pass "pass:$SIGN_PASS" --new-signer --ks signing-material/rotation.jks --ks-key-alias operit-new --ks-pass "pass:$SIGN_PASS" --key-pass "pass:$SIGN_PASS"
+          echo "$SIGN_PASS" > signing-material/pass.txt
+          ls -la signing-material
       - name: Configure Android SDK
         shell: bash
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+          if [ -f signing-material/release.jks ] && [ -f signing-material/pass.txt ]; then
+            SIGN_PASS="$(cat signing-material/pass.txt)"
+            {
+              echo "RELEASE_STORE_FILE=$PWD/signing-material/release.jks"
+              echo "RELEASE_STORE_PASSWORD=$SIGN_PASS"
+              echo "RELEASE_KEY_ALIAS=operit"
+              echo "RELEASE_KEY_PASSWORD=$SIGN_PASS"
+              echo "APK_ROTATION_NEW_STORE_FILE=$PWD/signing-material/rotation.jks"
+              echo "APK_ROTATION_NEW_STORE_PASSWORD=$SIGN_PASS"
+              echo "APK_ROTATION_NEW_KEY_ALIAS=operit-new"
+              echo "APK_ROTATION_NEW_KEY_PASSWORD=$SIGN_PASS"
+              echo "APK_ROTATION_LINEAGE_FILE=$PWD/signing-material/lineage.bin"
+            } >> local.properties
+            echo "Android release signing material configured"
+          else
+            echo "WARN: no signing material (assembleDebug only)"
+          fi
 
       - name: Run Gradle build
         env:
