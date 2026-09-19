@@ -433,9 +433,11 @@ android {
             }
         }
         debug {
-            applicationIdSuffix = ".debug"
+            // Developer preview uses the release package identity so it shares
+            // sandbox packages, preferences, and model configs with the installed app.
+            // It cannot be installed alongside a release APK.
             signingConfig = signingConfigs.getByName("debug")
-            resValue("string", "app_name", "Operit Debug")
+            resValue("string", "app_name", "Operit Developer Preview")
         }
         create("clone") {
             initWith(getByName("debug"))
