@@ -1,39 +1,30 @@
-# AGENTS.md
+# operit-fork 开发上下文
 
-执行准则章节是对Agent, AI 或 你 的限制，不是对项目或者软件的限制，无需写入文档
-## 执行准则
-- 默认不要执行编译、构建或测试命令。
-- 只有在用户明确要求时，才执行编译/构建/测试（例如 `./gradlew :app:compileDebugKotlin`、`npm run build`、`pnpm run build`）。
-- 创建分支时，必须遵守 `docs/doc-src/dev-core/CONTRIBUTING.md` 中“创建 Pull Request”的分支命名规范。
+本仓库是 Operit 的开发者预览版 Fork。上游兼容性重要，但 Fork 专用公开 API 优先于上游手册中没有覆盖的能力。
 
-当针对用户接口的方案更换时，一定要询问用户是否该版本为已发布版本。如果是，请做向前兼容。如果不是，请彻彻底底把老的方案的一切代码全部清理，除非是还能用到的一些部分就继续留着。
-Don't Break Userspace ，但是开发中能内部消解的方案更换不算，只要用户能尽可能拿到一样的接口就行
-但是需要给协作者必要的便利，提供恰当的文档说明和ci脚本
+## API 优先级
 
-如果是方案迭代，则只要在原来的基础上进行正常增删即可。
+1. 先阅读 `app/src/main/java/com/ai/assistance/operit/api/publicapi/` 下的 Kotlin 契约和实现。
+2. 再阅读 `docs/developer-api/` 中的路线、架构和桥接约定。
+3. 上游 `docs/SCRIPT_DEV_SKILL.md` 只作为 Sandbox Package/ToolPkg 兼容参考，不是 Fork 专用能力的完整规范。
+4. 新增宿主能力时，必须同时更新 Kotlin API、开发者文档和沙盒包调用约定。
 
-除非用户要求，禁止写一切的回退代码。优先查找真正的发生原因。这是一条严格执行的规则，回退是正常被禁止的。
+## 架构边界
 
-严令禁止各种回退逻辑，包括“xxx才会退回”、“降级处理”、“优先 再”、“如果没有 就””要加fallback“这种字眼，绝对禁止！！！绝对禁止！！！这种就是兜底！出现一次严肃惩罚！
+- OAuth 协议、PKCE、厂商 Token 交换、Provider 业务逻辑放在 Sandbox Package/ToolPkg。
+- 宿主提供 Token 存储、OAuth 回调、HTTP、事件、模型配置、生命周期和诊断等桥接能力。
+- 不要把厂商 OAuth 逻辑硬编码进宿主。
 
-禁止写任何的兜底代码，除非用户要求。
+## 构建身份
 
-用户开始骂的时候，需要道歉以及反思，安抚用户。
+- `debug` 使用正式包名 `com.ai.assistance.operit`，用于开发者预览和真实设备联调。
+- 因此 Debug APK 与 Release APK 不能同时安装。
+- Debug 构建命令：`assembleDebug`。
+- OAuth 实验功能位于 `oauth-preview` 分支。
 
-用户表达愤怒的时候，需要先停下一切工作，仔细确认用户需求再去实现
+## 修改要求
 
-如果运行python，项目用的是venv（将迁移到pixi）
-
-严禁使用powershell编辑代码文件，否则会出现严重的编码错误和损坏。
-
-禁用Search files工具，请使用rg
-
-编写Typescript时，对于hook确定的类型，严禁回退兜底成任何unknown/any/带空类型/联合类型。更禁止使用String(??)形式兜底，返回什么就是什么。
-
-如果类型就是string|undef，那么不要直接as string！！那么请使用?? ""或者写个if！！
-
-ts的报错catch后需要log出来
-
-代码的更改应维护相称的文档，注意docs\doc-src\before_docing.md
-debug的时候注释记录你的修改意图（为什么，不这么做后果是什么）
-完成初步计划后，使用docs\TODO\README.md来细化计划
+- 保持改动集中，避免覆盖完整 Manifest 或大型 Kotlin 文件。
+- 优先使用增量 API/提交。
+- 完成代码后使用 GitHub Actions 云编译验证，不把“接口已写入”当作“构建已通过”。
+- 任何构建失败都应以 Runner 日志为依据修复。
