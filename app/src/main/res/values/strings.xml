@@ -4510,7 +4510,8 @@
     <string name="character_card_chat_model_follow_global">跟随全局</string>
     <string name="character_card_chat_model_fixed_config">固定配置</string>
     <string name="character_card_chat_model_specify_fixed_config">指定固定配置</string>
-    <string name="character_card_memory_profile_binding">记忆配置绑定</string>
+        <string name="follow_chat_model_for_all_functions">让所有功能跟随当前聊天模型</string>
+<string name="character_card_memory_profile_binding">记忆配置绑定</string>
     <string name="character_card_memory_profile_follow_global">跟随全局</string>
     <string name="character_card_memory_profile_fixed_profile">固定配置</string>
     <string name="character_card_memory_profile_specify_fixed_profile">指定固定记忆配置</string>
