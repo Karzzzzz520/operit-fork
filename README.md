@@ -63,3 +63,12 @@ ChatGPT/Codex 保留 Operit 原生 OAuth，不重复实现私有协议。
 The host provides secure primitives such as Android Keystore storage, OAuth callback routing, controlled HTTP, model configuration, provider registration, events, lifecycle hooks, and diagnostics. Vendor-specific OAuth and provider behavior remains in sandbox packages whenever possible.
 
 This repository follows the upstream LGPL-3.0 license and applicable third-party licenses.
+
+
+## Developer Preview Build
+
+The `debug` variant intentionally uses the same application ID as the release variant: `com.ai.assistance.operit`. This lets the developer preview use the same installed Sandbox Packages, preferences, token records, and model configurations. Because Android treats them as the same application identity, the preview APK cannot be installed alongside the release APK; use one or the other.
+
+Build the preview with `assembleDebug`. The preview runtime initializes `DeveloperApiRuntime` during application startup. Sandbox Package and ToolPkg code should prefer the public bridge APIs under `app/src/main/java/com/ai/assistance/operit/api/publicapi/`; the upstream handbook remains relevant for compatibility, but it is not the authoritative guide for fork-only capabilities.
+
+Fork-only capability identifiers, lifecycle rules, bridge contracts, and examples belong in `docs/developer-api/`. When adding a new host API, update the Kotlin contract, the developer documentation, and the sandbox integration notes together.
