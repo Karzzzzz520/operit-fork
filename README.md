@@ -1,74 +1,40 @@
 # operit-fork
 
-[中文](#中文说明) | [English](#english)
+Developer-first fork of [Operit](https://github.com/AAswordman/Operit) — an open-source AI Agent platform for Android.
 
-## 中文说明
+It keeps full upstream compatibility (app features, model configuration, ToolPkg, sandbox packages, script formats, data directory, config migration) while opening **versioned, permission-aware host bridge APIs** for Sandbox Packages and ToolPkg extensions. The goal is not to duplicate a closed app, but to grow Operit into an extensible Android AI Agent platform.
 
-`operit-fork` 是 Operit 的开发者优先 Fork。目标不是复制一个封闭应用，而是在保持上游功能和数据兼容性的同时，把 Operit 发展为可扩展的 Android AI Agent 平台。
+## Highlights
 
-### 核心原则
+- **Host bridge API layer** (Kotlin contracts under `app/src/main/java/com/ai/assistance/operit/api/publicapi/`): capability negotiation & API versioning, secure token storage (Android Keystore), OAuth callback routing, controlled HTTP, model configuration bridge, AI provider registration, event bus, lifecycle / message / prompt hooks, tool registration, and structured diagnostics.
 
-- 保留上游功能、配置和数据兼容性。
-- 厂商协议、OAuth 流程和业务能力优先放在 Sandbox Package / ToolPkg。
-- 宿主只提供安全、稳定、版本化的桥接 API。
-- Token 默认进入 Android Keystore，不向插件暴露密钥材料。
-- 所有扩展能力都经过 capability 声明、权限控制和结构化诊断。
-- 尽量保持对上游 Operit 的同步能力。
+- **Vendor logic stays out of the host**: vendor-specific OAuth and provider behavior lives in Sandbox Packages / ToolPkg. The host only bridges; it does not reimplement private protocols. ChatGPT/Codex keeps Operit's native OAuth.
 
-### 开发者 API
+- **Permission-aware & diagnostics-first**: extensions go through capability declarations and permission control. Tokens are stored in Keystore and never exposed to plug-ins.
 
-当前 API 契约位于 `app/src/main/java/com/ai/assistance/operit/api/publicapi/`，包括：
+- **Cloud CI**: GitHub Actions workflows (`Android Build` / `Android Tests` / `PR Check`) support manual `workflow_dispatch` triggers.
 
-- 能力协商与 API 版本；
-- 安全 Token 存储；
-- OAuth 回调桥接；
-- 动态 AI Provider；
-- 事件总线；
-- 受控 HTTP；
-- 模型配置读写；
-- 开发者诊断。
+## Status note
 
-### OAuth Provider 设计
-
-Google Gemini、Microsoft、Claude 等厂商逻辑由沙盒子包实现。宿主负责：
-
-- Keystore；
-- OAuth 回调；
-- Token 生命周期；
-- 请求权限；
-- Provider 注册；
-- 模型配置桥接。
-
-ChatGPT/Codex 保留 Operit 原生 OAuth，不重复实现私有协议。
-
-### 分支
-
-- `main`：Fork 基线与可审阅的公开 API 基线；
-- `develop`：持续开发分支；
-- `api-v1`：开发者 API 契约、文档和实验实现。
-
-### 文档
-
-- `docs/developer-api/ROADMAP.md`：路线图；
-- `docs/developer-api/ARCHITECTURE.md`：架构说明。
-
-### 许可证
-
-本项目基于 AAswordman/Operit Fork，遵循上游 LGPL-3.0 及适用的第三方许可证。
-
-## English
-
-`operit-fork` is a developer-first fork of Operit. It preserves upstream compatibility while opening versioned, permission-aware APIs for Sandbox Packages and ToolPkg extensions.
-
-The host provides secure primitives such as Android Keystore storage, OAuth callback routing, controlled HTTP, model configuration, provider registration, events, lifecycle hooks, and diagnostics. Vendor-specific OAuth and provider behavior remains in sandbox packages whenever possible.
-
-This repository follows the upstream LGPL-3.0 license and applicable third-party licenses.
-
+The fork host API is currently landed on the **Kotlin contract layer**. The corresponding JS side (an `OperitFork` global injected into the ToolPkg JavaScript runtime) and the type declarations in `toolpkg.d.ts` are **not yet wired** — see the open items under `docs/developer-api/`. This is intentional in-progress work, not a regression.
 
 ## Developer Preview Build
 
-The `debug` variant intentionally uses the same application ID as the release variant: `com.ai.assistance.operit`. This lets the developer preview use the same installed Sandbox Packages, preferences, token records, and model configurations. Because Android treats them as the same application identity, the preview APK cannot be installed alongside the release APK; use one or the other.
+The `debug` variant intentionally uses the same application ID as release: `com.ai.assistance.operit`. This lets the preview reuse the same installed Sandbox Packages, preferences, token records, and model configurations. Because Android treats them as the same application identity, the preview APK cannot be installed alongside the release APK; use one or the other.
 
-Build the preview with `assembleDebug`. The preview runtime initializes `DeveloperApiRuntime` during application startup. Sandbox Package and ToolPkg code should prefer the public bridge APIs under `app/src/main/java/com/ai/assistance/operit/api/publicapi/`; the upstream handbook remains relevant for compatibility, but it is not the authoritative guide for fork-only capabilities.
+Build the preview with `assembleDebug`. The preview runtime initializes `DeveloperApiRuntime` during application startup. Sandbox Package and ToolPkg code should prefer the public bridge APIs under `app/src/main/java/com/ai/assistance/operit/api/publicapi/`.
 
-Fork-only capability identifiers, lifecycle rules, bridge contracts, and examples belong in `docs/developer-api/`. When adding a new host API, update the Kotlin contract, the developer documentation, and the sandbox integration notes together.
+## Branches
+
+- `main` — fork baseline + reviewable public API baseline
+- `develop` — ongoing development
+- `api-v1` — developer API contracts, docs, and experimental implementations
+
+## Docs
+
+- `docs/developer-api/ROADMAP.md` — roadmap
+- `docs/developer-api/ARCHITECTURE.md` — architecture
+
+## License
+
+Fork of [AAswordman/Operit](https://github.com/AAswordman/Operit), follows upstream LGPL-3.0 and applicable third-party licenses.
