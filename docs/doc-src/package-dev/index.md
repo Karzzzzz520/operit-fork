@@ -27,6 +27,7 @@
 - `tool-types.d.ts`
 - `java-bridge.d.ts`
 - `toolpkg.d.ts`
+- `fork-api.d.ts`（仅副作用导入，向全局注入 `OperitFork` 命名空间）
 - `compose-dsl.d.ts`
 - `compose-dsl.material3.generated.d.ts`
 
@@ -155,6 +156,27 @@ const Tools: {
 - `JavaBridgeJsMethod`
 - `JavaBridgeInterfaceRef`
 - `JavaBridgeCallbackResult`
+
+## Fork 专用能力：`OperitFork`（`fork-api.d.ts`）
+
+`fork-api.d.ts` 声明 operit-fork 新增的开发者能力命名空间 `OperitFork`。它不导出普通类型，而是通过 `declare global` 把该命名空间注入全局，因此在包内无需 import 即可引用（类型层面）。
+
+它覆盖 8 个能力：
+
+| 能力标识 | 全局成员 |
+| --- | --- |
+| `secure_token_store` | `OperitFork.secureTokenStore` |
+| `oauth_callback` | `OperitFork.oauthCallback` |
+| `model_config` | `OperitFork.modelConfig` |
+| `ai_provider` | `OperitFork.aiProvider` |
+| `controlled_http` | `OperitFork.controlledHttp` |
+| `event_bus` | `OperitFork.eventBus` |
+| `lifecycle_hook` | `OperitFork.lifecycleHook` |
+| `developer_diagnostics` | `OperitFork.developerDiagnostics` |
+
+另有两个辅助函数：`OperitFork.negotiate(manifest)` 与 `OperitFork.isAvailable()`。所有能力方法返回统一的 `ApiResult<T>`。
+
+> 截至 2026-09，该命名空间尚未注入 JS 运行时，访问会得到 `undefined`，请先做特性探测。详见 [Fork 能力参考](../../developer-api/FORK_CAPABILITIES.md)。
 
 ## 示例
 

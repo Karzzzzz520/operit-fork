@@ -1,0 +1,79 @@
+# Fork 能力参考（Developer API）
+
+本 Fork（operit-fork）在保持与上游 Operit 兼容的基础上，为沙盒包 / ToolPkg 扩展新增了一组宿主能力（capabilities）。本文档是这组能力的权威参考：契约来源、JS 侧调用约定、当前注入状态。
+
+## 设计原则
+
+- 宿主只提供桥接原语：Token 存储、OAuth 回调、受控 HTTP、模型配置、AI Provider 注册、事件总线、生命周期、诊断。
+- 厂商 OAuth 协议、PKCE、Token 交换、Provider 业务逻辑一律放在 Sandbox Package / ToolPkg 中，不得硬编码进宿主。
+- 包通过 manifest 显式请求能力，宿主按包协商授权；Token 只在用户授权特定账户与操作时才返回给包。
+
+## 能力清单（8 个）
+
+能力标识定义在 OperitDeveloperCapability（app/src/main/java/com/ai/assistance/operit/api/publicapi/OperitDeveloperApi.kt）：
+
+| 标识 | Kotlin 契约 | 用途 |
+| --- | --- | --- |
+| secure_token_store | SecureTokenStore | 按包+账户读写 Token（Android Keystore 后端） |
+| oauth_callback | OAuthBridge | OAuth 授权开始 / 回调消费 / 取消，PKCE + state 校验 |
+| model_config | ModelConfigBridge | 模型配置的增删改查（endpoint / modelNames / headers） |
+| ai_provider | AiProviderBridge | 注册 / 注销 / 列出 Provider，并执行一次对话 |
+| controlled_http | ControlledHttpClient | 受策略约束的 HTTP 请求（超时 / 头 / body） |
+| event_bus | DeveloperEventBus | 事件发布 / 订阅 / 退订，跨包通信 |
+| lifecycle_hook | PluginLifecycle | 包加载 / 启用 / 禁用 / 卸载的生命周期回调 |
+| developer_diagnostics | DeveloperDiagnostics | 诊断事件记录 / 查询 / 清理 |
+
+## JS 侧调用约定
+
+### 现状（注入状态）
+
+截至 2026-09，OperitFork 命名空间尚未注入 JS 运行时。审计结论（INJECTION_REVIEW.md 第五节）：
+
+- JS 全局变量清单（JsExecutionScriptBuilder.kt:60-80）仍为 21 个上游名称（ToolPkg、Tools、Java、Android 等），不含 OperitFork。
+- fork_api_probe.js 部署后预期输出：全部 fork_* 探针为 false，证明桥接尚未注入。
+- toolpkg.d.ts 当前不包含任何 Fork API 类型声明。
+
+### 计划中的调用形状
+
+注入链（设计）：Kotlin API → JsToolPkgExecutionContext → ToolPkgCommonBridgePlugin / JS 全局 → 注册与调用解析器 → toolpkg.d.ts → 探针包。
+
+包内调用形态（目标）如下：
+
+```ts
+// 通过全局命名空间访问（注入后）
+const result = await OperitFork.secureTokenStore.get('my-package', 'account-1');
+
+// 或通过 capability 协商
+const granted = await OperitFork.negotiate({
+  packageId: 'com.example.mypkg',
+  apiVersion: '1.0.0',
+  requestedCapabilities: ['secure_token_store', 'oauth_callback'],
+});
+```
+
+### Kotlin 契约签名速查
+
+以下接口全部位于 app/src/main/java/com/ai/assistance/operit/api/publicapi/，返回统一 DeveloperApiResult<T>（success / value / errorCode / message）：
+
+- SecureTokenStore: put / get / delete / listAccounts / status
+- OAuthBridge: begin / consumeCallback / cancel
+- ModelConfigBridge: list / create / update / delete
+- AiProviderBridge: register / unregister / list / execute
+- ControlledHttpClient: execute(packageId, HttpRequestSpec) -> HttpResponseSpec
+- DeveloperEventBus: publish / subscribe / unsubscribe
+- PluginLifecycle: onLoad / onEnable / onDisable / onUnload
+- DeveloperDiagnostics: record / query / clear
+
+## 版本与权限
+
+- API 版本：DeveloperApiVersion(major, minor, patch)，包 manifest 请求 apiVersion，宿主 negotiate 返回实际授予的能力集。
+- 权限存储：PluginPermissionStore（内存 InMemoryPluginPermissionStore / 持久化 PersistentPluginPermissionStore），按包隔离。
+- 运行时组装：DeveloperApiRuntime（DeveloperApiRuntime.kt）统一装配 registry / events / permissions。
+
+## 相关文档
+
+- [Fork 架构](ARCHITECTURE.md)
+- [OAuth 沙盒桥接](OAUTH_SANDBOX_BRIDGE.md)
+- [路线图](ROADMAP.md)
+- [包开发指南](../SCRIPT_DEV_GUIDE.md)
+- [ToolPkg 格式说明](../TOOLPKG_FORMAT_GUIDE.md)

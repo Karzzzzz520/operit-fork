@@ -1,0 +1,255 @@
+/**
+ * Fork 专用开发者 API 类型声明（开发者预览）。
+ *
+ * 对应 Kotlin 契约：app/src/main/java/com/ai/assistance/operit/api/publicapi/
+ *
+ * 注意：截至 2026-09，本命名空间尚未注入 JS 运行时。这些声明描述目标调用形状，用于：
+ * - 让包作者提前编写类型安全的 Fork 能力调用；
+ * - 作为注入链（JsEngine / JsLibraries / ToolPkgCommonBridgePlugin）落地后的契约对照。
+ *
+ * 运行时未注入时访问 OperitFork 会得到 undefined，请在包内先做特性探测
+ * （OperitFork?.isAvailable?.() 或 typeof OperitFork !== 'undefined'）。
+ *
+ * @since Fork API 1.0.0 (developer preview)
+ */
+
+declare global {
+    namespace OperitFork {
+        /** 稳定能力标识，对应 Kotlin OperitDeveloperCapability */
+        type Capability =
+            | 'secure_token_store'
+            | 'oauth_callback'
+            | 'model_config'
+            | 'ai_provider'
+            | 'controlled_http'
+            | 'event_bus'
+            | 'lifecycle_hook'
+            | 'developer_diagnostics';
+
+        type JsonPrimitive = string | number | boolean | null;
+        type JsonValue = JsonPrimitive | JsonValue[] | { [key: string]: JsonValue };
+
+        /** 对应 Kotlin DeveloperApiResult<T> */
+        interface ApiResult<T = unknown> {
+            success: boolean;
+            value?: T;
+            errorCode?: string;
+            message?: string;
+        }
+
+        /** 对应 Kotlin DeveloperApiVersion */
+        interface ApiVersion {
+            major: number;
+            minor: number;
+            patch: number;
+        }
+
+        /** 对应 Kotlin DeveloperApiManifest */
+        interface ApiManifest {
+            packageId: string;
+            /** 语义化版本，如 '1.0.0'；也可传 ApiVersion 对象 */
+            apiVersion: string | ApiVersion;
+            requestedCapabilities: Capability[];
+            displayName?: string;
+        }
+
+        /** 对应 Kotlin TokenStatus */
+        interface TokenStatus {
+            exists: boolean;
+            expiresAtEpochMs?: number;
+            refreshable: boolean;
+            provider?: string;
+        }
+
+        /** 对应 Kotlin HttpRequestSpec */
+        interface HttpRequestSpec {
+            method: string;
+            url: string;
+            headers?: Record<string, string>;
+            body?: string;
+            timeoutMs?: number;
+            tokenAccountId?: string;
+        }
+
+        /** 对应 Kotlin HttpResponseSpec */
+        interface HttpResponseSpec {
+            statusCode: number;
+            headers: Record<string, string>;
+            body: string;
+            requestId?: string;
+        }
+
+        /** 对应 Kotlin OAuthBeginRequest */
+        interface OAuthBeginRequest {
+            packageId: string;
+            provider: string;
+            authorizationUrl: string;
+            redirectUri: string;
+            codeVerifier: string;
+            state: string;
+        }
+
+        interface OAuthSession {
+            sessionId: string;
+            provider: string;
+            state: string;
+            redirectUri: string;
+        }
+
+        interface OAuthCallback {
+            provider: string;
+            code?: string;
+            error?: string;
+            stateVerified: boolean;
+        }
+
+        interface ModelConfigView {
+            id: string;
+            name: string;
+            providerType: string;
+            endpoint: string;
+            modelNames: string[];
+            accountId?: string;
+        }
+
+        interface ModelConfigCreateRequest {
+            name: string;
+            providerType: string;
+            endpoint: string;
+            modelNames: string[];
+            accountId?: string;
+            headersJson?: string;
+        }
+
+        interface ModelConfigUpdateRequest {
+            name?: string;
+            endpoint?: string;
+            modelNames?: string[];
+            accountId?: string;
+            headersJson?: string;
+        }
+
+        interface AiProviderDescriptor {
+            id: string;
+            displayName: string;
+            capabilities?: string[];
+            accountId?: string;
+        }
+
+        interface AiProviderRequest {
+            packageId: string;
+            providerId: string;
+            accountId?: string;
+            model: string;
+            messagesJson: string;
+            parametersJson?: string;
+        }
+
+        interface AiProviderResponse {
+            content: string;
+            rawJson?: string;
+            usageJson?: string;
+        }
+
+        interface DeveloperEvent {
+            type: string;
+            payloadJson?: string;
+            timestampEpochMs?: number;
+            correlationId?: string;
+        }
+
+        interface DiagnosticEvent {
+            level: string;
+            area: string;
+            message: string;
+            detailsJson?: string;
+            timestampEpochMs?: number;
+        }
+
+        interface LifecycleContext {
+            packageId: string;
+            apiVersion: ApiVersion;
+            grantedCapabilities: Capability[];
+        }
+
+        /** 对应 Kotlin SecureTokenStore */
+        interface SecureTokenStoreApi {
+            put(packageId: string, accountId: string, tokenJson: string): Promise<ApiResult<void>>;
+            get(packageId: string, accountId: string): Promise<ApiResult<string>>;
+            delete(packageId: string, accountId: string): Promise<ApiResult<void>>;
+            listAccounts(packageId: string): Promise<ApiResult<string[]>>;
+            status(packageId: string, accountId: string): Promise<ApiResult<TokenStatus>>;
+        }
+
+        /** 对应 Kotlin OAuthBridge */
+        interface OAuthApi {
+            begin(request: OAuthBeginRequest): Promise<ApiResult<OAuthSession>>;
+            consumeCallback(packageId: string, state: string, code?: string, error?: string): Promise<ApiResult<OAuthCallback>>;
+            cancel(packageId: string, sessionId: string): Promise<ApiResult<void>>;
+        }
+
+        /** 对应 Kotlin ModelConfigBridge */
+        interface ModelConfigApi {
+            list(packageId: string): Promise<ApiResult<ModelConfigView[]>>;
+            create(packageId: string, request: ModelConfigCreateRequest): Promise<ApiResult<ModelConfigView>>;
+            update(packageId: string, configId: string, request: ModelConfigUpdateRequest): Promise<ApiResult<ModelConfigView>>;
+            delete(packageId: string, configId: string): Promise<ApiResult<void>>;
+        }
+
+        /** 对应 Kotlin AiProviderBridge */
+        interface AiProviderApi {
+            register(packageId: string, descriptor: AiProviderDescriptor): Promise<ApiResult<void>>;
+            unregister(packageId: string, providerId: string): Promise<ApiResult<void>>;
+            list(packageId?: string): Promise<ApiResult<AiProviderDescriptor[]>>;
+            execute(request: AiProviderRequest): Promise<ApiResult<AiProviderResponse>>;
+        }
+
+        /** 对应 Kotlin ControlledHttpClient */
+        interface ControlledHttpApi {
+            execute(packageId: string, request: HttpRequestSpec): Promise<ApiResult<HttpResponseSpec>>;
+        }
+
+        /** 对应 Kotlin DeveloperEventBus */
+        interface EventBusApi {
+            publish(packageId: string, event: DeveloperEvent): Promise<ApiResult<void>>;
+            subscribe(packageId: string, eventType: string, handler: (event: DeveloperEvent) => void): Promise<ApiResult<string>>;
+            unsubscribe(packageId: string, subscriptionId: string): Promise<ApiResult<void>>;
+        }
+
+        /** 对应 Kotlin PluginLifecycle */
+        interface LifecycleApi {
+            onLoad(packageId: string): Promise<ApiResult<void>>;
+            onEnable(packageId: string): Promise<ApiResult<void>>;
+            onDisable(packageId: string): Promise<ApiResult<void>>;
+            onUnload(packageId: string): Promise<ApiResult<void>>;
+        }
+
+        /** 对应 Kotlin DeveloperDiagnostics */
+        interface DiagnosticsApi {
+            record(packageId: string, event: DiagnosticEvent): Promise<ApiResult<void>>;
+            query(packageId?: string, limit?: number): Promise<ApiResult<DiagnosticEvent[]>>;
+            clear(packageId: string): Promise<ApiResult<void>>;
+        }
+
+        /** 能力协商，对应 Kotlin DeveloperApiRegistry.negotiate */
+        function negotiate(manifest: ApiManifest): Promise<ApiResult<Capability[]>>;
+
+        /** 查询能力是否已授权，对应 Kotlin DeveloperApiRegistry.isCapabilityGranted */
+        function isCapabilityGranted(packageId: string, capability: Capability): boolean;
+
+        /** 探测 Fork 运行时是否已注入；未注入时返回 false */
+        function isAvailable(): boolean;
+
+        /** 能力命名空间（对应 8 个 capability） */
+        const secureTokenStore: SecureTokenStoreApi;
+        const oauthCallback: OAuthApi;
+        const modelConfig: ModelConfigApi;
+        const aiProvider: AiProviderApi;
+        const controlledHttp: ControlledHttpApi;
+        const eventBus: EventBusApi;
+        const lifecycleHook: LifecycleApi;
+        const developerDiagnostics: DiagnosticsApi;
+    }
+}
+
+export {};

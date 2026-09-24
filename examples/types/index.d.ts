@@ -90,6 +90,8 @@ import {
     ComposeCanvasCommand as ComposeCanvasCommandType
 } from './compose-dsl';
 import { ToolPkg as ToolPkgType } from './toolpkg';
+// Fork 专用开发者 API（全局 OperitFork 命名空间）；未注入 JS 运行时，先做特性探测
+import './fork-api';
 
 // Export core interfaces and functions
 export * from './core';

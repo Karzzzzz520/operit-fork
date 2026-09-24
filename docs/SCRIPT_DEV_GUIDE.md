@@ -659,6 +659,66 @@ const service = await EnhancedAIService.callSuspend(
 );
 ```
 
+### 3.5. Fork 专用能力（Developer API）
+
+> 本节描述 operit-fork 相对上游新增的能力，是 **Fork 版包开发的重点**。
+
+Fork 在保持上游兼容的同时，为沙盒包 / ToolPkg 提供统一的开发者能力桥接（Developer API）。
+能力通过全局命名空间 `OperitFork` 暴露，类型声明见 `examples/types/fork-api.d.ts`，
+权威契约参考见 [Fork 能力参考](developer-api/FORK_CAPABILITIES.md)。
+
+#### 3.5.1. 设计边界
+
+- 宿主只提供桥接原语：Token 存储、OAuth 回调、受控 HTTP、模型配置、AI Provider 注册、事件总线、生命周期、诊断。
+- 厂商 OAuth 协议、PKCE、Token 交换、Provider 业务逻辑一律放在 Sandbox Package / ToolPkg 中，不得硬编码进宿主。
+- 包通过 manifest 显式请求能力，宿主按包协商授权；Token 只在用户授权特定账户与操作时才返回给包。
+
+#### 3.5.2. 能力清单
+
+| 能力标识 | 用途 |
+| --- | --- |
+| `secure_token_store` | 按包+账户读写 Token（Android Keystore 后端） |
+| `oauth_callback` | OAuth 授权开始 / 回调消费 / 取消，PKCE + state 校验 |
+| `model_config` | 模型配置的增删改查 |
+| `ai_provider` | 注册 / 注销 / 列出 Provider，并执行一次对话 |
+| `controlled_http` | 受策略约束的 HTTP 请求 |
+| `event_bus` | 事件发布 / 订阅 / 退订 |
+| `lifecycle_hook` | 包加载 / 启用 / 禁用 / 卸载回调 |
+| `developer_diagnostics` | 诊断事件记录 / 查询 / 清理 |
+
+#### 3.5.3. 调用形状
+
+```typescript
+// 先探测运行时是否已注入
+if (typeof OperitFork !== "undefined" && OperitFork.isAvailable?.()) {
+    // 协商能力
+    const granted = await OperitFork.negotiate({
+        packageId: "com.example.mypkg",
+        apiVersion: "1.0.0",
+        requestedCapabilities: ["secure_token_store", "oauth_callback"],
+    });
+
+    // 读取 Token（仅在用户授权该账户后）
+    const token = await OperitFork.secureTokenStore.get("com.example.mypkg", "account-1");
+    if (token.success) {
+        complete(token.value);
+    } else {
+        complete(`token error: ${token.errorCode} ${token.message}`);
+    }
+}
+```
+
+所有能力方法都返回统一的 `ApiResult<T>`（`success` / `value` / `errorCode` / `message`），不会抛异常。
+
+#### 3.5.4. 注入状态（重要）
+
+截至 2026-09，`OperitFork` 命名空间**尚未注入 JS 运行时**：
+
+- JS 全局变量清单（`JsExecutionScriptBuilder.kt:60-80`）仍为 21 个上游名称，不含 `OperitFork`。
+- 部署 `fork_api_probe.js` 后，全部 `fork_*` 探针预期为 `false`。
+
+因此现在编写的 Fork 调用必须做特性探测；注入链落地后即可直接使用，无需改动调用代码。
+
 ## 4. 编写第一个脚本 (TypeScript)
 
 推荐使用 TypeScript 来编写脚本，这样可以充分利用 `types/` 目录中提供的类型定义，获得更好的开发体验。
