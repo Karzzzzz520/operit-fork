@@ -11,6 +11,7 @@ on:
         options:
           - assembleDebug
           - ':app:assembleRelease'
+          - ':app:assembleRelease assembleDebug'
           - ':app:assembleNightly'
           - ':app:assembleClone'
           - ':app:bundleRelease'
@@ -250,7 +251,10 @@ jobs:
             *) echo "Unsupported workflow event: $EVENT_NAME" >&2; exit 2 ;;
           esac
           chmod +x ./gradlew
-          ./gradlew "$gradle_task" --stacktrace --no-daemon
+          # A task value may list several Gradle tasks separated by spaces, e.g.
+          # ":app:assembleRelease assembleDebug" for a combined fork build.
+          read -r -a gradle_tasks <<< "$gradle_task"
+          ./gradlew "${gradle_tasks[@]}" --stacktrace --no-daemon
 
       - name: Upload Android reports
         if: always()
