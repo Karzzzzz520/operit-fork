@@ -27,20 +27,20 @@
 
 ### 现状（注入状态）
 
-截至 2026-09，OperitFork 命名空间尚未注入 JS 运行时。审计结论（INJECTION_REVIEW.md 第五节）：
+截至 2026-09，OperitFork 命名空间已注入 JS 运行时。实现链路：
 
-- JS 全局变量清单（JsExecutionScriptBuilder.kt:60-80）仍为 21 个上游名称（ToolPkg、Tools、Java、Android 等），不含 OperitFork。
-- fork_api_probe.js 部署后预期输出：全部 fork_* 探针为 false，证明桥接尚未注入。
-- toolpkg.d.ts 当前不包含任何 Fork API 类型声明。
+- JS 桥：`core/tools/javascript/JsForkApiBridge.kt`（`buildForkApiBridgeScript()`），作为 bootstrap 模块 `quickjs/init/fork-api-bridge.js` 注册，`globals = ["OperitFork"]`。
+- 执行预导入：`JsExecutionScriptBuilder.kt` 增加 `var OperitFork = globalThis.OperitFork;`（上游 21 个全局保持不变）。
+- 原生调度：`JsEngine` 新增 `@JavascriptInterface fun operitForkInvoke(requestJson: String)`，路由到 `api/publicapi/ForkApiBridge.kt`。
+- 能力实现：`ForkApiBridge` 装配 `DefaultDeveloperApiRegistry`、`PreviewTokenStore`、`PreviewControlledHttpClient`、`InMemoryDeveloperEventBus`、`InMemoryDeveloperDiagnostics`，以及 `InMemoryOAuthBridge` / `InMemoryModelConfigBridge` / `InMemoryAiProviderBridge` / `NoopPluginLifecycle`。
+- 类型：`examples/types/fork-api.d.ts`，由类型入口 `index.d.ts` 副作用导入。
 
-### 计划中的调用形状
+注入链路可概括为：Kotlin 契约 → ForkApiBridge → NativeInterface.operitForkInvoke → fork-api-bridge.js → OperitFork 全局 → fork-api.d.ts → 探针包。
 
-注入链（设计）：Kotlin API → JsToolPkgExecutionContext → ToolPkgCommonBridgePlugin / JS 全局 → 注册与调用解析器 → toolpkg.d.ts → 探针包。
-
-包内调用形态（目标）如下：
+包内仍建议做特性探测，以便在旧宿主上优雅降级。调用形态如下：
 
 ```ts
-// 通过全局命名空间访问（注入后）
+// 通过全局命名空间访问（现已可用）
 const result = await OperitFork.secureTokenStore.get('my-package', 'account-1');
 
 // 或通过 capability 协商

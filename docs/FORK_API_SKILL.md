@@ -43,29 +43,34 @@ Fork 通过全局命名空间 `OperitFork` 暴露 8 个宿主桥接能力：
 - 包通过 manifest 显式请求能力，宿主按包协商授权。
 - Token 只在用户授权特定账户与操作时才返回给包，不向插件暴露密钥材料。
 
-## 运行时注入状态（重要）
+## 运行时注入状态
 
-截至 2026-09，`OperitFork` 命名空间**尚未注入 JS 运行时**：
+`OperitFork` 命名空间**已注入 JS 运行时**：
 
-- JS 全局变量清单仍为上游 21 个名称，不含 `OperitFork`。
-- `types/fork-api.d.ts` 提供的是**目标调用形状**的预览声明。
-- 现在编写的 Fork 调用必须先做特性探测，注入落地后无需改动调用代码。
+- 桥脚本：`core/tools/javascript/JsForkApiBridge.kt`，注册为 bootstrap 模块 `quickjs/init/fork-api-bridge.js`（`globals = ["OperitFork"]`）。
+- 原生调度：`JsEngine.operitForkInvoke` → `api/publicapi/ForkApiBridge.kt` → publicapi 契约。
+- 类型声明与注入签名一致，见 `types/fork-api.d.ts`。
+- 仍建议做特性探测，以便在旧宿主上优雅降级。
 
-```ts
-const available =
-    typeof OperitFork !== "undefined" && OperitFork.isAvailable?.();
-if (available) {
-    const granted = await OperitFork.negotiate({
+> ToolPkg JS 解析器拒绝现代语法。包内请使用 `var` / 普通 `function`，不要用可选链 `?.`、箭头函数或模板字符串。
+
+```js
+if (typeof OperitFork !== "undefined" && OperitFork.isAvailable()) {
+    OperitFork.negotiate({
         packageId: "com.example.mypkg",
         apiVersion: "1.0.0",
         requestedCapabilities: ["secure_token_store", "oauth_callback"],
+    }).then(function (granted) {
+        if (!granted.success) {
+            complete("negotiate failed: " + granted.errorCode);
+            return;
+        }
+        return OperitFork.secureTokenStore.get("com.example.mypkg", "account-1").then(function (token) {
+            complete(token.success ? token.value : token.errorCode);
+        });
     });
-    if (granted.success) {
-        const token = await OperitFork.secureTokenStore.get("com.example.mypkg", "account-1");
-        complete(token.success ? token.value : token.errorCode);
-    }
 } else {
-    complete("Fork API runtime not injected yet");
+    complete("OperitFork is unavailable on this host");
 }
 ```
 

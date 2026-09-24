@@ -6,6 +6,7 @@ import android.os.Looper
 import android.webkit.JavascriptInterface
 import androidx.annotation.Keep
 import androidx.core.content.ContextCompat
+import com.ai.assistance.operit.api.publicapi.ForkApiBridge
 import com.ai.assistance.operit.core.application.ActivityLifecycleManager
 import com.ai.assistance.operit.core.chat.logMessageTiming
 import com.ai.assistance.operit.core.chat.messageTimingNow
@@ -58,6 +59,7 @@ class JsEngine(private val context: Context) {
     private val bitmapRegistry = ConcurrentHashMap<String, Bitmap>()
     private val binaryDataRegistry = ConcurrentHashMap<String, ByteArray>()
     private val javaObjectRegistry = ConcurrentHashMap<String, Any>()
+    private val forkApiBridge: ForkApiBridge by lazy { ForkApiBridge(context) }
     private val externalJavaCodeLoader = JsExternalJavaCodeLoader(context)
 
     private val toolHandler = AIToolHandler.getInstance(context)
@@ -1589,6 +1591,10 @@ class JsEngine(private val context: Context) {
             check(!toolPkgRegistrationSession.isActive()) {
                 "$operation is not allowed while registerToolPkg() is running"
             }
+        }
+        @JavascriptInterface
+        fun operitForkInvoke(requestJson: String): String {
+            return forkApiBridge.invoke(requestJson)
         }
 
         @JavascriptInterface

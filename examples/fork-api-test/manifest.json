@@ -3,7 +3,7 @@
   "toolpkg_id": "com.operit.fork.api_test",
   "version": "0.1.0",
   "api_version": "1.0.0",
-  "main": "dist/main.js",
+  "main": "main.js",
   "display_name": {"zh": "Operit Fork API 测试", "en": "Operit Fork API Test"},
   "description": {"zh": "验证 Fork 宿主桥接能力与 ToolPkg 运行环境", "en": "Smoke-tests the Operit Fork host bridge and ToolPkg runtime"},
   "enabled_by_default": false,

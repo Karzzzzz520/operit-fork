@@ -27,6 +27,11 @@ internal fun buildRuntimeBootstrapModules(
             globals = listOf("ToolPkg")
         ),
         module(
+            fileName = "quickjs/init/fork-api-bridge.js",
+            source = buildForkApiBridgeScript(),
+            globals = listOf("OperitFork")
+        ),
+        module(
             fileName = "quickjs/init/tools.js",
             source = getJsToolsDefinition(),
             globals = listOf("Tools")

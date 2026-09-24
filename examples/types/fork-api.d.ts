@@ -3,12 +3,11 @@
  *
  * 对应 Kotlin 契约：app/src/main/java/com/ai/assistance/operit/api/publicapi/
  *
- * 注意：截至 2026-09，本命名空间尚未注入 JS 运行时。这些声明描述目标调用形状，用于：
- * - 让包作者提前编写类型安全的 Fork 能力调用；
- * - 作为注入链（JsEngine / JsLibraries / ToolPkgCommonBridgePlugin）落地后的契约对照。
+ * 实现：api/publicapi/ForkApiBridge.kt + quickjs/init/fork-api-bridge.js，
+ * 经 NativeInterface.operitForkInvoke 调度。
  *
- * 运行时未注入时访问 OperitFork 会得到 undefined，请在包内先做特性探测
- * （OperitFork?.isAvailable?.() 或 typeof OperitFork !== 'undefined'）。
+ * 该命名空间已注入 JS 运行时（JsLibraries 的 fork-api-bridge 模块，globals = ["OperitFork"]）。
+ * 仍建议在包内做特性探测（typeof OperitFork !== 'undefined'），以便在旧宿主上优雅降级。
  *
  * @since Fork API 1.0.0 (developer preview)
  */
@@ -231,13 +230,29 @@ declare global {
             clear(packageId: string): Promise<ApiResult<void>>;
         }
 
+        /** 宿主信息，对应 ForkApiBridge.hostInfo() */
+        interface HostInfo {
+            host: string;
+            apiVersion: string;
+            platform: string;
+            runtime: string;
+            injected: boolean;
+            applicationId: string;
+        }
+
         /** 能力协商，对应 Kotlin DeveloperApiRegistry.negotiate */
         function negotiate(manifest: ApiManifest): Promise<ApiResult<Capability[]>>;
+
+        /** 列出宿主支持的全部能力标识 */
+        function listCapabilities(): Promise<ApiResult<Capability[]>>;
+
+        /** 读取宿主信息（版本、平台、是否已注入） */
+        function getHostInfo(): Promise<ApiResult<HostInfo>>;
 
         /** 查询能力是否已授权，对应 Kotlin DeveloperApiRegistry.isCapabilityGranted */
         function isCapabilityGranted(packageId: string, capability: Capability): boolean;
 
-        /** 探测 Fork 运行时是否已注入；未注入时返回 false */
+        /** 探测 Fork 运行时是否已注入；已注入时返回 true */
         function isAvailable(): boolean;
 
         /** 能力命名空间（对应 8 个 capability） */

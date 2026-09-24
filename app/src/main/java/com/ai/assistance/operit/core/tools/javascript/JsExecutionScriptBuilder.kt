@@ -58,6 +58,7 @@ private fun buildExecutionPreludeSource(): String {
         };
         var reportDetailedError = function() { return __operitInvokeCallRuntime('reportDetailedError', arguments); };
         var ToolPkg = globalThis.ToolPkg;
+        var OperitFork = globalThis.OperitFork;
         var Tools = globalThis.Tools;
         var Java = globalThis.Java;
         var Android = globalThis.Android;
