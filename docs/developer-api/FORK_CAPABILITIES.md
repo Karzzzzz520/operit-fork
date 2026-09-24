@@ -70,6 +70,23 @@ const granted = await OperitFork.negotiate({
 - 权限存储：PluginPermissionStore（内存 InMemoryPluginPermissionStore / 持久化 PersistentPluginPermissionStore），按包隔离。
 - 运行时组装：DeveloperApiRuntime（DeveloperApiRuntime.kt）统一装配 registry / events / permissions。
 
+## 扩展宿主接口
+
+除 8 个 capability 外，OperitFork 还暴露一组直连宿主既有功能的接口：
+
+| 命名空间 | 方法 | 说明 |
+| --- | --- | --- |
+| `OperitFork.tools` | `invoke(toolName, params)` | 调用宿主内置工具（`AIToolHandler.executeTool`） |
+| `OperitFork.packages` | `list` / `enable` / `disable` / `isEnabled` | 沙盒包管理（`PackageManager`） |
+| `OperitFork.host` | `getAppInfo()` | 包名 / versionName / versionCode |
+| `OperitFork.update` | `check(currentVersion?)` | 检查 fork 发布渠道 |
+
+### 内置热重载
+
+宿主在 `OperitApplication.onCreate` 启动 `PackageHotReloadWatcher`，监听
+`getExternalFilesDir/packages`。文件变化经 1500ms debounce 后自动调用
+`PackageManager.refreshExternalPackagesForDebug()`，无需重启，也无需 adb 广播。
+
 ## 相关文档
 
 - [Fork 架构](ARCHITECTURE.md)

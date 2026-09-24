@@ -30,6 +30,7 @@ import com.ai.assistance.operit.plugins.lifecycle.AppLifecycleHookParams
 import com.ai.assistance.operit.plugins.lifecycle.AppLifecycleHookPluginRegistry
 import com.ai.assistance.operit.core.config.SystemPromptConfig
 import com.ai.assistance.operit.core.tools.AIToolHandler
+import com.ai.assistance.operit.core.tools.packTool.PackageHotReloadWatcher
 import com.ai.assistance.operit.core.tools.system.AndroidShellExecutor
 import com.ai.assistance.operit.core.tools.system.Terminal
 import com.ai.assistance.operit.core.workflow.WorkflowSchedulerInitializer
@@ -124,6 +125,9 @@ class OperitApplication : Application(), ImageLoaderFactory, WorkConfiguration.P
         appStartupTimeMs = startTime
         instance = this
         developerApiRuntime = DeveloperApiRuntime()
+
+        // Built-in hot reload for sandbox packages: watch the external packages directory.
+        PackageHotReloadWatcher.start(applicationContext)
 
         // Workers and receivers can cold-start the process without creating an Activity.
         // Initialize process-wide preference dependencies before those entry points can run.

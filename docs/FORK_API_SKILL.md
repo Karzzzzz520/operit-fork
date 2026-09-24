@@ -35,6 +35,9 @@ Fork 通过全局命名空间 `OperitFork` 暴露 8 个宿主桥接能力：
 | `lifecycle_hook` | 包加载 / 启用 / 禁用 / 卸载回调 |
 | `developer_diagnostics` | 诊断事件记录 / 查询 / 清理 |
 
+此外还有直连宿主既有功能的扩展接口：`OperitFork.tools.invoke`（内置工具）、
+`OperitFork.packages`（包管理）、`OperitFork.host.getAppInfo`、`OperitFork.update.check`。
+
 权威契约参考：[references/FORK_CAPABILITIES.md](references/FORK_CAPABILITIES.md)。
 
 ## 设计边界

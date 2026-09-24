@@ -1,6 +1,13 @@
 package com.ai.assistance.operit.api.publicapi
 
 import android.content.Context
+import com.ai.assistance.operit.core.tools.AIToolHandler
+import com.ai.assistance.operit.core.tools.packTool.PackageManager
+import com.ai.assistance.operit.data.model.AITool
+import com.ai.assistance.operit.data.model.ToolParameter
+import com.ai.assistance.operit.data.updates.UpdateManager
+import com.ai.assistance.operit.data.updates.UpdateStatus
+import kotlinx.coroutines.runBlocking
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -26,6 +33,10 @@ class ForkApiBridge(context: Context) {
     private val modelConfigs: ModelConfigBridge = InMemoryModelConfigBridge()
     private val aiProviders: AiProviderBridge = InMemoryAiProviderBridge()
     private val lifecycle: PluginLifecycle = NoopPluginLifecycle()
+    private val aiToolHandler: AIToolHandler by lazy { AIToolHandler.getInstance(appContext) }
+    private val packageManager: PackageManager by lazy {
+        PackageManager.getInstance(appContext, aiToolHandler)
+    }
 
     fun invoke(requestJson: String): String {
         return try {
@@ -113,6 +124,13 @@ class ForkApiBridge(context: Context) {
                     )
                 )
             "developerDiagnostics.clear" -> resultJson(diagnostics.clear(params.optString("packageId", "")))
+            "tools.invoke" -> okResult(invokeHostTool(params))
+            "packages.list" -> okResult(packageManager.getAvailablePackages().keys.sorted())
+            "packages.enable" -> okResult(packageManager.enablePackage(params.optString("packageName", "")))
+            "packages.disable" -> okResult(packageManager.disablePackage(params.optString("packageName", "")))
+            "packages.isEnabled" -> okResult(packageManager.isPackageEnabled(params.optString("packageName", "")))
+            "host.appInfo" -> okResult(appInfo())
+            "update.check" -> okResult(updateCheck(params))
             else -> errorResult("unknown_method", "unsupported OperitFork method: " + method)
         }
     }
@@ -363,6 +381,99 @@ class ForkApiBridge(context: Context) {
                 json
             }
             else -> value.toString()
+        }
+    }
+
+    /** Executes a host tool through AIToolHandler and returns its structured result. */
+    private fun invokeHostTool(params: JSONObject): JSONObject {
+        val toolName = params.optString("toolName", "").trim()
+        if (toolName.isEmpty()) {
+            return errorResult("invalid_request", "toolName is required")
+        }
+        val arguments = params.optJSONObject("params")
+        val toolParameters = ArrayList<ToolParameter>()
+        if (arguments != null) {
+            val keys = arguments.keys()
+            while (keys.hasNext()) {
+                val key = keys.next()
+                val value = arguments.opt(key)
+                toolParameters.add(
+                    ToolParameter(
+                        key,
+                        if (value == null || value == JSONObject.NULL) "" else value.toString()
+                    )
+                )
+            }
+        }
+        val result = aiToolHandler.executeTool(AITool(name = toolName, parameters = toolParameters))
+        return JSONObject()
+            .put("success", result.success)
+            .put("toolName", result.toolName)
+            .put("result", result.result.toString())
+            .put("error", result.error ?: JSONObject.NULL)
+    }
+
+    /** Application identity and version, as shown on the About page. */
+    private fun appInfo(): JSONObject {
+        val json = JSONObject()
+        json.put("packageName", appContext.packageName)
+        return try {
+            val info = appContext.packageManager.getPackageInfo(appContext.packageName, 0)
+            json.put("versionName", info.versionName ?: "")
+            json.put(
+                "versionCode",
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+                    info.longVersionCode
+                } else {
+                    info.versionCode.toLong()
+                }
+            )
+            json
+        } catch (error: Exception) {
+            json.put("versionName", "")
+            json.put("versionCode", 0L)
+            json
+        }
+    }
+
+    /** Checks the fork release channel for a newer version. */
+    private fun updateCheck(params: JSONObject): JSONObject {
+        val requestedVersion = params.optString("currentVersion", "")
+        val currentVersion =
+            requestedVersion.ifEmpty {
+                runCatching {
+                        appContext.packageManager
+                            .getPackageInfo(appContext.packageName, 0)
+                            .versionName
+                    }
+                    .getOrNull()
+                    .orEmpty()
+            }
+        return try {
+            val status = runBlocking { UpdateManager.checkForUpdates(appContext, currentVersion) }
+            when (status) {
+                is UpdateStatus.Available ->
+                    JSONObject()
+                        .put("status", "available")
+                        .put("newVersion", status.newVersion)
+                        .put("updateUrl", status.updateUrl)
+                        .put("downloadUrl", status.downloadUrl)
+                is UpdateStatus.PatchAvailable ->
+                    JSONObject()
+                        .put("status", "available")
+                        .put("newVersion", status.newVersion)
+                        .put("updateUrl", status.updateUrl)
+                        .put("downloadUrl", "")
+                is UpdateStatus.UpToDate -> JSONObject().put("status", "up_to_date")
+                is UpdateStatus.Checking -> JSONObject().put("status", "checking")
+                is UpdateStatus.Error ->
+                    JSONObject().put("status", "error").put("message", status.message)
+                else -> JSONObject().put("status", "unknown")
+            }
+        } catch (error: Exception) {
+            JSONObject()
+                .put("status", "error")
+                .put("message", error.message ?: error.javaClass.simpleName)
         }
     }
 

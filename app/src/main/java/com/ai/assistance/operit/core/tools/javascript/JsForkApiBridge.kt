@@ -247,6 +247,39 @@ internal fun buildForkApiBridgeScript(): String {
                 }
             };
 
+            var tools = {
+                invoke: function(toolName, params) {
+                    return invoke('tools.invoke', { toolName: toolName, params: params || {} });
+                }
+            };
+
+            var packages = {
+                list: function() {
+                    return invoke('packages.list', {});
+                },
+                enable: function(packageName) {
+                    return invoke('packages.enable', { packageName: packageName });
+                },
+                disable: function(packageName) {
+                    return invoke('packages.disable', { packageName: packageName });
+                },
+                isEnabled: function(packageName) {
+                    return invoke('packages.isEnabled', { packageName: packageName });
+                }
+            };
+
+            var host = {
+                getAppInfo: function() {
+                    return invoke('host.appInfo', {});
+                }
+            };
+
+            var update = {
+                check: function(currentVersion) {
+                    return invoke('update.check', { currentVersion: currentVersion });
+                }
+            };
+
             var OperitFork = {
                 isAvailable: function() {
                     return true;
@@ -274,7 +307,11 @@ internal fun buildForkApiBridgeScript(): String {
                 controlledHttp: controlledHttp,
                 eventBus: eventBus,
                 lifecycleHook: lifecycleHook,
-                developerDiagnostics: developerDiagnostics
+                developerDiagnostics: developerDiagnostics,
+                tools: tools,
+                packages: packages,
+                host: host,
+                update: update
             };
 
             try {

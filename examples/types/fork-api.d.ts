@@ -230,6 +230,53 @@ declare global {
             clear(packageId: string): Promise<ApiResult<void>>;
         }
 
+        /** 宿主应用信息 */
+        interface AppInfo {
+            packageName: string;
+            versionName: string;
+            versionCode: number;
+        }
+
+        /** 宿主工具调用结果 */
+        interface ToolInvokeResult {
+            success: boolean;
+            toolName: string;
+            result: string;
+            error?: string | null;
+        }
+
+        /** 更新检查结果 */
+        interface UpdateCheckResult {
+            status: 'available' | 'up_to_date' | 'checking' | 'error' | 'unknown';
+            newVersion?: string;
+            updateUrl?: string;
+            downloadUrl?: string;
+            message?: string;
+        }
+
+        /** 调用宿主内置工具，对应 AIToolHandler */
+        interface ToolsApi {
+            invoke(toolName: string, params?: Record<string, string | number | boolean>): Promise<ApiResult<ToolInvokeResult>>;
+        }
+
+        /** 沙盒包管理，对应 PackageManager */
+        interface PackagesApi {
+            list(): Promise<ApiResult<string[]>>;
+            enable(packageName: string): Promise<ApiResult<string>>;
+            disable(packageName: string): Promise<ApiResult<string>>;
+            isEnabled(packageName: string): Promise<ApiResult<boolean>>;
+        }
+
+        /** 宿主应用信息接口 */
+        interface HostApi {
+            getAppInfo(): Promise<ApiResult<AppInfo>>;
+        }
+
+        /** Fork 更新渠道检查接口 */
+        interface UpdateApi {
+            check(currentVersion?: string): Promise<ApiResult<UpdateCheckResult>>;
+        }
+
         /** 宿主信息，对应 ForkApiBridge.hostInfo() */
         interface HostInfo {
             host: string;
@@ -264,6 +311,12 @@ declare global {
         const eventBus: EventBusApi;
         const lifecycleHook: LifecycleApi;
         const developerDiagnostics: DiagnosticsApi;
+
+        /** 扩展开放的宿主接口 */
+        const tools: ToolsApi;
+        const packages: PackagesApi;
+        const host: HostApi;
+        const update: UpdateApi;
     }
 }
 
