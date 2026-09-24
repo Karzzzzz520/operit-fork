@@ -513,7 +513,7 @@ EOF`);
           ${script}
         })();
       `);
-            const returnValue = func(consoleProxy);
+            const returnValue = await func(consoleProxy);
             let output = logs.join('\n');
             if (returnValue !== undefined) {
                 if (output) {
