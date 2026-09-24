@@ -589,8 +589,8 @@
     <string name="about_developer">Fork 作者: &lt;a href="https://github.com/Karzzzzz520"&gt;Karzzzzz520&lt;/a&gt;&lt;br/&gt;原作者: &lt;a href="https://github.com/AAswordman"&gt;AAswordman&lt;/a&gt;</string>
     <string name="about_contact">https://github.com/Karzzzzz520/operit-fork/issues</string>
     <string name="feedback">反馈地址</string>
-    <string name="project_url_fork">项目地址（Fork）</string>
-    <string name="project_url_upstream">项目地址（原版）</string>
+    <string name="project_url_fork">Fork 项目地址</string>
+    <string name="project_url_upstream">原版项目地址</string>
     <string name="toolreg_reload_sandbox_packages_desc">重新加载沙盒包（热重载）：扫描外部包目录并重载已启用的包，无需重启应用。</string>
     <string name="about_website">&lt;a href="https://github.com/Karzzzzz520/operit-fork"&gt;GitHub: https://github.com/Karzzzzz520/operit-fork&lt;/a&gt;</string>
     <string name="about_copyright">© 2025 - 2026 Operit. 保留所有权利。</string>

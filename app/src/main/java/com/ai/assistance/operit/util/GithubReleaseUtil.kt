@@ -1,10 +1,12 @@
 package com.ai.assistance.operit.util
 
 import android.content.Context
+import com.ai.assistance.operit.BuildConfig
 import com.ai.assistance.operit.util.AppLogger
 import com.ai.assistance.operit.data.api.GitHubApiService
 import java.net.HttpURLConnection
 import java.net.URL
+import org.json.JSONObject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -175,7 +177,51 @@ class GithubReleaseUtil(private val context: Context) {
      * 获取最新的 Release 信息
      * 如果用户已登录，会自动带上认证头以提高 API 配额
      */
+    /**
+     * Reads release/version.json from the fork through jsDelivr.
+     *
+     * The manifest is tiny and CDN-cached, so it works on networks where the GitHub API is
+     * unreachable. Returns null when the file is missing or malformed so the API path can run.
+     */
+    private fun fetchVersionManifest(repoOwner: String, repoName: String): ReleaseInfo? {
+        val url = "https://cdn.jsdelivr.net/gh/$repoOwner/$repoName@main/release/version.json"
+        return try {
+            val connection =
+                (URL(url).openConnection() as HttpURLConnection).apply {
+                    connectTimeout = 8000
+                    readTimeout = 8000
+                    doInput = true
+                    setRequestProperty("User-Agent", "Operit/${BuildConfig.VERSION_NAME}")
+                }
+            connection.connect()
+            if (connection.responseCode != HttpURLConnection.HTTP_OK) {
+                connection.disconnect()
+                return null
+            }
+            val body = connection.inputStream.bufferedReader().use { it.readText() }
+            connection.disconnect()
+            val json = JSONObject(body)
+            val version = json.optString("version", "").trim()
+            if (version.isEmpty()) {
+                return null
+            }
+            ReleaseInfo(
+                version = version,
+                downloadUrl = json.optString("downloadUrl", ""),
+                releaseNotes = json.optString("notes", ""),
+                releasePageUrl = json.optString("updateUrl", "")
+            )
+        } catch (error: Exception) {
+            AppLogger.w(TAG, "version manifest fetch failed: $url", error)
+            null
+        }
+    }
+
     suspend fun fetchLatestReleaseInfo(repoOwner: String, repoName: String): ReleaseInfo? = withContext(Dispatchers.IO) {
+        // Prefer the jsDelivr-served version manifest. It is reachable on networks where
+        // api.github.com is blocked or rate limited, which is the common update-check failure.
+        fetchVersionManifest(repoOwner, repoName)?.let { manifest -> return@withContext manifest }
+
         try {
             val result = githubApiService.getRepositoryReleases(
                 owner = repoOwner,
