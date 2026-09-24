@@ -586,9 +586,10 @@
     <string name="about_title">关于 Operit AI</string>
     <string name="about_version">版本: %1$s</string>
     <string name="about_description">Operit AI是一个智能助手应用，能够帮助用户更高效地使用设备，提供界面分析、聊天对话等功能。</string>
-    <string name="about_developer">开发者: &lt;a href="https://github.com/AAswordman"&gt;AAswordman&lt;/a&gt;</string>
-    <string name="about_contact">联系我们: aaswordsman@foxmail.com</string>
-    <string name="about_website">&lt;a href="https://github.com/AAswordman/Operit"&gt;GitHub: https://github.com/AAswordman/Operit&lt;/a&gt;</string>
+    <string name="about_developer">Fork 作者: &lt;a href="https://github.com/Karzzzzz520"&gt;Karzzzzz520&lt;/a&gt;&lt;br/&gt;原作者: &lt;a href="https://github.com/AAswordman"&gt;AAswordman&lt;/a&gt;</string>
+    <string name="about_contact">https://github.com/Karzzzzz520/operit-fork/issues</string>
+    <string name="feedback">反馈地址</string>
+    <string name="about_website">&lt;a href="https://github.com/Karzzzzz520/operit-fork"&gt;GitHub: https://github.com/Karzzzzz520/operit-fork&lt;/a&gt;</string>
     <string name="about_copyright">© 2025 - 2026 Operit. 保留所有权利。</string>
     <string name="star_on_github">在 GitHub 点个 Star</string>
     <string name="update_log">更新日志</string>

@@ -193,7 +193,7 @@ class GithubReleaseUtil(private val context: Context) {
 
                     val latestRelease = releases.first()
                     val tagName = latestRelease.tag_name
-                    val version = tagName.removePrefix("v")
+                    val version = tagName.removePrefix("v").removePrefix("fork-")
 
                     // 查找 APK 资源
                     val apkAsset = latestRelease.assets.find { it.name.endsWith(".apk") }

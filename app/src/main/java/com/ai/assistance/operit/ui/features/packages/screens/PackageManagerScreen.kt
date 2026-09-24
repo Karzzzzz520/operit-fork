@@ -105,7 +105,7 @@ private suspend fun runQuickPluginCreatorSetupAndPublishResult(
     onResult(null)
     val result =
         withContext(Dispatchers.IO) {
-            runQuickPluginCreatorSetup(
+            runPackageSkillsSetup(
                 context = context,
                 packageManager = packageManager,
                 toolHandler = toolHandler
@@ -118,35 +118,6 @@ private suspend fun runQuickPluginCreatorSetupAndPublishResult(
             result.result.toString()
         } else {
             result.error ?: context.getString(R.string.quick_plugin_creator_setup_failed)
-        }
-    )
-}
-
-private suspend fun runForkApiDevSetupAndPublishResult(
-    context: android.content.Context,
-    packageManager: PackageManager,
-    toolHandler: AIToolHandler,
-    onRunningChange: (Boolean) -> Unit,
-    onResult: (ToolResult?) -> Unit,
-    onMessage: suspend (String) -> Unit
-) {
-    onRunningChange(true)
-    onResult(null)
-    val result =
-        withContext(Dispatchers.IO) {
-            runForkApiDevSetup(
-                context = context,
-                packageManager = packageManager,
-                toolHandler = toolHandler
-            )
-        }
-    onResult(result)
-    onRunningChange(false)
-    onMessage(
-        if (result.success) {
-            result.result.toString()
-        } else {
-            result.error ?: context.getString(R.string.quick_plugin_creator_fork_setup_failed)
         }
     )
 }
@@ -241,8 +212,6 @@ fun PackageManagerScreen(
     var quickPluginRequirement by rememberSaveable { mutableStateOf("") }
     var quickPluginSetupRunning by remember { mutableStateOf(false) }
     var quickPluginSetupResult by remember { mutableStateOf<ToolResult?>(null) }
-    var forkApiSetupRunning by remember { mutableStateOf(false) }
-    var forkApiSetupResult by remember { mutableStateOf<ToolResult?>(null) }
 
     val requiredEnvByPackage by remember {
         derivedStateOf {
@@ -1172,22 +1141,7 @@ fun PackageManagerScreen(
                             )
                         }
                     },
-                    forkSetupRunning = forkApiSetupRunning,
-                    forkSetupResult = forkApiSetupResult,
-                    onRunForkSetup = {
-                        scope.launch {
-                            runForkApiDevSetupAndPublishResult(
-                                context = context,
-                                packageManager = packageManager,
-                                toolHandler = toolHandler,
-                                onRunningChange = { forkApiSetupRunning = it },
-                                onResult = { forkApiSetupResult = it },
-                                onMessage = { message ->
-                                    snackbarHostState.showSnackbar(message)
-                                }
-                            )
-                        }
-                    },
+
                     onDismiss = { showQuickPluginCreatorDialog = false },
                     onConfirm = {
                         val requirement = quickPluginRequirement.trim()

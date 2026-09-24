@@ -58,6 +58,32 @@ internal fun runForkApiDevSetup(
         failureMessageRes = R.string.quick_plugin_creator_fork_setup_failed
     )
 
+/**
+ * Installs both package-development skills in one action: the upstream SandboxPackage_DEV skill
+ * and the fork-only ForkAPI_DEV skill. The two skills stay separate on disk; only the trigger is
+ * shared so the fork skill is not hidden behind a second, easily missed button.
+ */
+internal fun runPackageSkillsSetup(
+    context: Context,
+    packageManager: PackageManager,
+    toolHandler: AIToolHandler
+): ToolResult {
+    val upstream = runQuickPluginCreatorSetup(context, packageManager, toolHandler)
+    if (!upstream.success) {
+        return upstream
+    }
+    val fork = runForkApiDevSetup(context, packageManager, toolHandler)
+    return if (fork.success) {
+        ToolResult(
+            toolName = fork.toolName,
+            success = true,
+            result = StringResultData(context.getString(R.string.quick_plugin_creator_setup_success))
+        )
+    } else {
+        fork
+    }
+}
+
 private fun runPluginSkillSetup(
     context: Context,
     packageManager: PackageManager,

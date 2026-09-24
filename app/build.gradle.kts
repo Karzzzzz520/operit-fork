@@ -397,8 +397,8 @@ android {
         applicationId = "com.ai.assistance.operit"
         minSdk = 26
         targetSdk = 34
-        versionCode = 51
-        versionName = "1.12.2"
+        versionCode = 52
+        versionName = "1.12.2-f1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
@@ -433,11 +433,12 @@ android {
             }
         }
         debug {
-            // Developer preview uses the release package identity so it shares
-            // sandbox packages, preferences, and model configs with the installed app.
-            // It cannot be installed alongside a release APK.
+            // The fork keeps a distinct debug identity so a preview build can be
+            // installed alongside the release APK. The dev tooling already targets
+            // com.ai.assistance.operit.debug.
+            applicationIdSuffix = ".debug"
             signingConfig = signingConfigs.getByName("debug")
-            resValue("string", "app_name", "Operit Developer Preview")
+            resValue("string", "app_name", "Operit Fork Debug")
         }
         create("clone") {
             initWith(getByName("debug"))

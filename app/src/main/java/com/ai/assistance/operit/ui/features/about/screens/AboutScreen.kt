@@ -58,7 +58,11 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withContext
 import java.util.Locale
 
+// Upstream project address (the original project).
 private const val GITHUB_PROJECT_URL = "https://github.com/AAswordman/Operit"
+// Fork repository and its issue tracker.
+private const val FORK_PROJECT_URL = "https://github.com/Karzzzzz520/operit-fork"
+private const val FORK_ISSUES_URL = "https://github.com/Karzzzzz520/operit-fork/issues"
 
 private enum class PatchUpdatePhase {
     SELECTING_MIRROR,
@@ -465,8 +469,7 @@ fun AboutScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
-    val preferences = remember { UserPreferencesManager.getInstance(context) }
-    val betaEnabled = preferences.betaPlanEnabled.collectAsState(initial = false).value
+    // The fork has no beta programme and no patch-update channel.
 
     // 获取UpdateManager实例
     val updateManager = remember { UpdateManager.getInstance(context) }
@@ -929,22 +932,7 @@ fun AboutScreen(
                         }
                     )
 
-                    HorizontalDivider(modifier = Modifier.padding(start = 66.dp))
 
-                    SettingsRow(
-                        icon = Icons.Default.NewReleases,
-                        iconTint = MaterialTheme.colorScheme.tertiary,
-                        title = stringResource(id = R.string.beta_plan),
-                        subtitleText = stringResource(id = R.string.beta_plan_desc),
-                        trailing = {
-                            Switch(
-                                checked = betaEnabled,
-                                onCheckedChange = { enabled ->
-                                    scope.launch { preferences.saveBetaPlanEnabled(enabled) }
-                                }
-                            )
-                        }
-                    )
                 }
             }
 
@@ -970,21 +958,14 @@ fun AboutScreen(
                         iconTint = MaterialTheme.colorScheme.secondary,
                         title = stringResource(id = R.string.star_on_github),
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_PROJECT_URL)).apply {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(FORK_PROJECT_URL)).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
                             context.startActivity(intent)
                         }
                     )
 
-                    HorizontalDivider(modifier = Modifier.padding(start = 66.dp))
 
-                    SettingsRow(
-                        icon = Icons.Default.History,
-                        iconTint = MaterialTheme.colorScheme.secondary,
-                        title = stringResource(R.string.update_log),
-                        onClick = { navigateToUpdateHistory() }
-                    )
 
                     HorizontalDivider(modifier = Modifier.padding(start = 66.dp))
 
@@ -1002,8 +983,14 @@ fun AboutScreen(
                     SettingsRow(
                         icon = Icons.Default.Email,
                         iconTint = MaterialTheme.colorScheme.primary,
-                        title = stringResource(id = R.string.contact),
-                        subtitleText = stringResource(id = R.string.about_contact)
+                        title = stringResource(id = R.string.feedback),
+                        subtitleText = FORK_ISSUES_URL,
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(FORK_ISSUES_URL)).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            context.startActivity(intent)
+                        }
                     )
 
                     HorizontalDivider(modifier = Modifier.padding(start = 66.dp))
@@ -1080,16 +1067,7 @@ fun UpdateDialog(
                             style = MaterialTheme.typography.bodyMedium,
                             modifier = Modifier.padding(bottom = 8.dp)
                         )
-                        if (status.releaseNotes.isNotEmpty() && !status.newVersion.contains("+")) {
-                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                            Text(
-                                stringResource(id = R.string.update_content),
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(bottom = 4.dp)
-                            )
-                            Text(status.releaseNotes, style = MaterialTheme.typography.bodySmall)
-                        }
+
                     }
                     is UpdateStatus.PatchAvailable -> {
                         Text(
