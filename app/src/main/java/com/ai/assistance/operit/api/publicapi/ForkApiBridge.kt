@@ -354,7 +354,7 @@ class ForkApiBridge(context: Context) {
                     .put("timestampEpochMs", value.timestampEpochMs)
             is Map<*, *> -> {
                 val json = JSONObject()
-                value.forEach { (key, item) -> json.put(String.valueOf(key), jsonValue(item)) }
+                value.forEach { (key, item) -> json.put(key?.toString() ?: "null", jsonValue(item)) }
                 json
             }
             is Collection<*> -> {
@@ -362,7 +362,7 @@ class ForkApiBridge(context: Context) {
                 value.forEach { item -> json.put(jsonValue(item)) }
                 json
             }
-            else -> String.valueOf(value)
+            else -> value.toString()
         }
     }
 
