@@ -370,6 +370,17 @@ def _manifest_runtime_files(folder: Path) -> list[Path]:
             raise ValueError(f"manifest.wasm_modules[{index}] must be an object: {manifest}")
         required_values.append((f"wasm_modules[{index}].path", module.get("path")))
 
+    # Subpackage entries are runtime files too. ToolPkg loads them by the path declared here, so a
+    # package whose subpackage JS is missing is rejected by the host with
+    # "Cannot find subpackage entry" / "No valid subpackages were loaded".
+    subpackages = parsed.get("subpackages", [])
+    if not isinstance(subpackages, list):
+        raise ValueError(f"manifest.subpackages must be an array: {manifest}")
+    for index, subpackage in enumerate(subpackages):
+        if not isinstance(subpackage, dict):
+            raise ValueError(f"manifest.subpackages[{index}] must be an object: {manifest}")
+        required_values.append((f"subpackages[{index}].entry", subpackage.get("entry")))
+
     runtime_files: list[Path] = []
     seen: set[Path] = set()
     for field, value in required_values:
@@ -495,8 +506,41 @@ def _iter_files_for_pack(repo_root: Path, folder: Path) -> list[Path]:
         seen.add(file_path)
         files.append(file_path)
 
+    for file_path in _generated_package_files(folder):
+        if file_path in seen:
+            continue
+        _validate_package_file(folder, file_path, "generated file")
+        seen.add(file_path)
+        files.append(file_path)
+
     files.sort(key=lambda x: x.relative_to(folder).as_posix())
     return files
+
+
+GENERATED_PACKAGE_DIRS = ("dist",)
+
+
+def _generated_package_files(folder: Path) -> list[Path]:
+    """Build outputs that must ship inside the .toolpkg even though git ignores them.
+
+    This fork keeps examples/*/dist/ out of git and ignores it, but toolpkg packaging used to
+    rely on git listing untracked, non-ignored files. Ignoring dist/ silently dropped every
+    compiled subpackage (for example dist/packages/apk_reverse.js) from the archive. Include the
+    build output tree explicitly so the whole batch of built-in packages stays complete.
+    """
+    collected: list[Path] = []
+    for dir_name in GENERATED_PACKAGE_DIRS:
+        output_root = folder / dir_name
+        if not output_root.is_dir():
+            continue
+        for dirpath, dirnames, filenames in os.walk(output_root):
+            dirnames[:] = [name for name in dirnames if name != "node_modules"]
+            for name in filenames:
+                candidate = Path(dirpath) / name
+                if candidate.is_file():
+                    collected.append(candidate)
+    collected.sort(key=lambda item: item.relative_to(folder).as_posix())
+    return collected
 
 
 def _pack_toolpkg_folder(repo_root: Path, source_folder: Path, destination_file: Path) -> None:
@@ -504,10 +548,22 @@ def _pack_toolpkg_folder(repo_root: Path, source_folder: Path, destination_file:
         raise ValueError(f"Missing manifest.hjson or manifest.json: {source_folder}")
 
     destination_file.parent.mkdir(parents=True, exist_ok=True)
+    written: set[str] = set()
     with zipfile.ZipFile(destination_file, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
         for file_path in _iter_files_for_pack(repo_root, source_folder):
             arcname = file_path.relative_to(source_folder).as_posix()
             zf.write(file_path, arcname)
+            written.add(arcname)
+
+    required = {
+        path.relative_to(source_folder).as_posix()
+        for path in _manifest_runtime_files(source_folder)
+    }
+    missing = sorted(required - written)
+    if missing:
+        raise RuntimeError(
+            f"ToolPkg archive is missing manifest runtime files: {destination_file}: {missing}"
+        )
 
 
 def _run_command(
