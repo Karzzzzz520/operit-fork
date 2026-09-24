@@ -81,11 +81,14 @@ const granted = await OperitFork.negotiate({
 | `OperitFork.host` | `getAppInfo()` | 包名 / versionName / versionCode |
 | `OperitFork.update` | `check(currentVersion?)` | 检查 fork 发布渠道 |
 
-### 内置热重载
+### 沙盒包热重载（显式调用）
 
-宿主在 `OperitApplication.onCreate` 启动 `PackageHotReloadWatcher`，监听
-`getExternalFilesDir/packages`。文件变化经 1500ms debounce 后自动调用
-`PackageManager.refreshExternalPackagesForDebug()`，无需重启，也无需 adb 广播。
+热重载不再是常驻监听，而是两个按需入口：
+
+- 内置工具 `reload_sandbox_packages`（由 agent 调用），执行 `PackageManager.refreshExternalPackagesForDebug()`；
+- `OperitFork.packages.reload()`，供沙盒包 / 脚本直接调用。
+
+两者都会重新扫描 `getExternalFilesDir/packages` 并重载已启用的包，无需重启应用。
 
 ## 相关文档
 

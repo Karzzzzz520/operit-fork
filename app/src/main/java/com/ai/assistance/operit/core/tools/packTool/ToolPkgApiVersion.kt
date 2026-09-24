@@ -55,17 +55,29 @@ private data class OperitVersion(
     }
 
     companion object {
-        private val VERSION_PATTERN = Regex("^(\\d+)\\.(\\d+)\\.(\\d+)(?:\\+(\\d+))?$")
-
+        /**
+         * Parses an app version that may carry upstream build metadata (+N) or a fork suffix
+         * (-fN). The fork ships versions such as "1.12.2-f1", so a strict x.y.z match would make
+         * PackageManager initialization fail on startup.
+         */
         fun parse(value: String): OperitVersion {
-            val normalized = value.trim()
-            val match = VERSION_PATTERN.matchEntire(normalized)
-                ?: throw IllegalArgumentException("Operit version is not supported: '$value'")
+            val normalized = value.trim().removePrefix("v").removePrefix("fork-")
+            val base = normalized.substringBefore('+').substringBefore('-')
+            val build =
+                normalized
+                    .substringAfter('+', "")
+                    .ifEmpty { normalized.substringAfter('-', "") }
+                    .filter { character -> character.isDigit() }
+                    .toIntOrNull() ?: 0
+            val parts = base.split(".")
+            if (parts.size != 3 || parts.any { part -> part.toIntOrNull() == null }) {
+                throw IllegalArgumentException("Operit version is not supported: '$value'")
+            }
             return OperitVersion(
-                major = match.groupValues[1].toInt(),
-                minor = match.groupValues[2].toInt(),
-                patch = match.groupValues[3].toInt(),
-                build = match.groupValues[4].takeIf(String::isNotEmpty)?.toInt() ?: 0
+                major = parts[0].toInt(),
+                minor = parts[1].toInt(),
+                patch = parts[2].toInt(),
+                build = build
             )
         }
     }

@@ -129,6 +129,7 @@ class ForkApiBridge(context: Context) {
             "packages.enable" -> okResult(packageManager.enablePackage(params.optString("packageName", "")))
             "packages.disable" -> okResult(packageManager.disablePackage(params.optString("packageName", "")))
             "packages.isEnabled" -> okResult(packageManager.isPackageEnabled(params.optString("packageName", "")))
+            "packages.reload" -> okResult(packageManager.refreshExternalPackagesForDebug())
             "host.appInfo" -> okResult(appInfo())
             "update.check" -> okResult(updateCheck(params))
             else -> errorResult("unknown_method", "unsupported OperitFork method: " + method)

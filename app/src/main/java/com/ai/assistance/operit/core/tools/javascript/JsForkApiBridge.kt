@@ -265,6 +265,9 @@ internal fun buildForkApiBridgeScript(): String {
                 },
                 isEnabled: function(packageName) {
                     return invoke('packages.isEnabled', { packageName: packageName });
+                },
+                reload: function() {
+                    return invoke('packages.reload', {});
                 }
             };
 

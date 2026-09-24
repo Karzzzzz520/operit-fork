@@ -6,6 +6,7 @@ import com.ai.assistance.operit.api.chat.enhance.ToolExecutionManager
 import com.ai.assistance.operit.core.tools.climode.CliToolModeSupport
 import com.ai.assistance.operit.core.tools.climode.ToolExposureMode
 import com.ai.assistance.operit.core.tools.defaultTool.ToolGetter
+import com.ai.assistance.operit.core.tools.packTool.PackageManager
 import com.ai.assistance.operit.data.model.AITool
 import com.ai.assistance.operit.data.model.ToolParameter
 import com.ai.assistance.operit.data.model.ToolResult
@@ -275,6 +276,30 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             executor = { tool ->
                 val adbTool = ToolGetter.getShellToolExecutor(context)
                 adbTool.invoke(tool)
+            }
+    )
+
+    // 沙盒包热重载：由 agent 显式调用的内置工具
+    handler.registerTool(
+            name = "reload_sandbox_packages",
+            descriptionGenerator = { _ -> s(R.string.toolreg_reload_sandbox_packages_desc) },
+            executor = { tool ->
+                try {
+                    val packageManager = PackageManager.getInstance(context, handler)
+                    val result = packageManager.refreshExternalPackagesForDebug()
+                    ToolResult(
+                            toolName = tool.name,
+                            success = true,
+                            result = StringResultData(result)
+                    )
+                } catch (e: Exception) {
+                    ToolResult(
+                            toolName = tool.name,
+                            success = false,
+                            result = StringResultData(""),
+                            error = e.message
+                    )
+                }
             }
     )
 

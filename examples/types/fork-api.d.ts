@@ -265,6 +265,8 @@ declare global {
             enable(packageName: string): Promise<ApiResult<string>>;
             disable(packageName: string): Promise<ApiResult<string>>;
             isEnabled(packageName: string): Promise<ApiResult<boolean>>;
+            /** 重新扫描外部包目录并重载已启用的包（热重载） */
+            reload(): Promise<ApiResult<string>>;
         }
 
         /** 宿主应用信息接口 */
