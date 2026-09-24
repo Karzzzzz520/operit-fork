@@ -6798,6 +6798,11 @@ Agora é possível usar o modo AutoGLM na interface de diálogo.</string>
     <string name="mcp_plugin_comment_view_thread">Ver andar</string>
     <string name="mcp_plugin_user_comments">Comentários do usuário</string>
     <string name="quick_plugin_creator_setup_failed">Falha na instalação ou atualização do Skill de criação de pacote</string>
+    <string name="quick_plugin_creator_fork_step_title">Skill de recursos da Fork API</string>
+    <string name="quick_plugin_creator_fork_step_desc">Instala o skill exclusivo do operit-fork: documentação de recursos de ponte OperitFork e declarações de tipo fork-api.d.ts.</string>
+    <string name="quick_plugin_creator_fork_run_setup">Instalar skill da Fork API</string>
+    <string name="quick_plugin_creator_fork_setup_success">Skill da Fork API instalado ou atualizado</string>
+    <string name="quick_plugin_creator_fork_setup_failed">Falha ao instalar ou atualizar o skill da Fork API</string>
     <string name="pkg_toolpkg_workflow_templates">Modelos de fluxo de trabalho: %1$d</string>
     <string name="pkg_toolpkg_workspace_templates">Modelos de espaço de trabalho: %1$d</string>
     <string name="pkg_toolpkg_registered_workflow_templates">Modelos de fluxo de trabalho</string>

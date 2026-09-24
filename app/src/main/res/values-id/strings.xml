@@ -6961,6 +6961,11 @@ Sekarang Anda dapat menggunakan mode AutoGLM di antarmuka percakapan.</string>
     <string name="mcp_plugin_comment_view_thread">Lihat lantai</string>
     <string name="mcp_plugin_user_comments">Komentar pengguna</string>
     <string name="quick_plugin_creator_setup_failed">Pembuatan Skill plugin gagal dipasang atau diperbarui</string>
+    <string name="quick_plugin_creator_fork_step_title">Skill kemampuan Fork API</string>
+    <string name="quick_plugin_creator_fork_step_desc">Memasang skill khusus operit-fork: dokumentasi kemampuan bridge OperitFork dan deklarasi tipe fork-api.d.ts.</string>
+    <string name="quick_plugin_creator_fork_run_setup">Pasang Skill Fork API</string>
+    <string name="quick_plugin_creator_fork_setup_success">Skill Fork API berhasil dipasang atau diperbarui</string>
+    <string name="quick_plugin_creator_fork_setup_failed">Gagal memasang atau memperbarui Skill Fork API</string>
     <string name="pkg_toolpkg_workflow_templates">Jumlah template alur kerja: %1$d</string>
     <string name="pkg_toolpkg_workspace_templates">Jumlah template ruang kerja: %1$d</string>
     <string name="pkg_toolpkg_registered_workflow_templates">Template alur kerja</string>

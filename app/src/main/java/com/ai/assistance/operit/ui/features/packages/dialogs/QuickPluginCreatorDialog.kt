@@ -13,7 +13,9 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -32,6 +34,9 @@ fun QuickPluginCreatorDialog(
     setupRunning: Boolean,
     setupResult: ToolResult?,
     onRunSetup: () -> Unit,
+    forkSetupRunning: Boolean,
+    forkSetupResult: ToolResult?,
+    onRunForkSetup: () -> Unit,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -72,6 +77,49 @@ fun QuickPluginCreatorDialog(
                         }
                     }
                     setupResult?.let { result ->
+                        Text(
+                            text = if (result.success) {
+                                result.result.toString()
+                            } else {
+                                result.error ?: stringResource(R.string.unknown_error)
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (result.success) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.error
+                            }
+                        )
+                    }
+
+                    HorizontalDivider()
+
+                    Text(
+                        text = stringResource(R.string.quick_plugin_creator_fork_step_title),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = stringResource(R.string.quick_plugin_creator_fork_step_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedButton(
+                            onClick = onRunForkSetup,
+                            enabled = !forkSetupRunning
+                        ) {
+                            if (forkSetupRunning) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(16.dp),
+                                    strokeWidth = 2.dp
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                            }
+                            Text(text = stringResource(R.string.quick_plugin_creator_fork_run_setup))
+                        }
+                    }
+                    forkSetupResult?.let { result ->
                         Text(
                             text = if (result.success) {
                                 result.result.toString()

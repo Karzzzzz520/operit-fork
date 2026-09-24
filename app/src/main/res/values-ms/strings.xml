@@ -6958,6 +6958,11 @@ Kini anda boleh menggunakan mod AutoGLM di antara muka perbualan.</string>
     <string name="mcp_plugin_comment_view_thread">Lihat tingkat</string>
     <string name="mcp_plugin_user_comments">Komen pengguna</string>
     <string name="quick_plugin_creator_setup_failed">Pemasangan atau kemas kini Skill penciptaan pakej gagal</string>
+    <string name="quick_plugin_creator_fork_step_title">Skill keupayaan Fork API</string>
+    <string name="quick_plugin_creator_fork_step_desc">Memasang skill khusus operit-fork: dokumentasi keupayaan jambatan OperitFork dan pengisytiharan jenis fork-api.d.ts.</string>
+    <string name="quick_plugin_creator_fork_run_setup">Pasang Skill Fork API</string>
+    <string name="quick_plugin_creator_fork_setup_success">Skill Fork API dipasang atau dikemas kini</string>
+    <string name="quick_plugin_creator_fork_setup_failed">Gagal memasang atau mengemas kini Skill Fork API</string>
     <string name="pkg_toolpkg_workflow_templates">Bilangan templat aliran kerja: %1$d</string>
     <string name="pkg_toolpkg_workspace_templates">Bilangan templat ruang kerja: %1$d</string>
     <string name="pkg_toolpkg_registered_workflow_templates">Templat aliran kerja</string>

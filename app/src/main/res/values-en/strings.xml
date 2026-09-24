@@ -8083,6 +8083,11 @@
     <string name="mcp_plugin_user_comments">User comments</string>
 
     <string name="quick_plugin_creator_setup_failed">Failed to install or update the Skill for package creation</string>
+    <string name="quick_plugin_creator_fork_step_title">Fork API capability Skill</string>
+    <string name="quick_plugin_creator_fork_step_desc">Installs the operit-fork-only skill: OperitFork host bridge capability docs and fork-api.d.ts type declarations.</string>
+    <string name="quick_plugin_creator_fork_run_setup">Install Fork API Skill</string>
+    <string name="quick_plugin_creator_fork_setup_success">Fork API Skill installed or updated</string>
+    <string name="quick_plugin_creator_fork_setup_failed">Failed to install or update the Fork API Skill</string>
     <string name="pkg_toolpkg_workflow_templates">Workflow templates: %1$d</string>
     <string name="pkg_toolpkg_workspace_templates">Workspace templates: %1$d</string>
     <string name="pkg_toolpkg_registered_workflow_templates">Workflow templates</string>

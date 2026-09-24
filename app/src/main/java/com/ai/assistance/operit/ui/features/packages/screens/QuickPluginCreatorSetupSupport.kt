@@ -21,14 +21,54 @@ private const val SANDBOX_PACKAGE_DEV_INSTALL_SCRIPT_URL =
     "https://cdn.jsdelivr.net/gh/AAswordman/Operit@main/tools/sandboxpackage_dev_install_or_update.js"
 private const val SANDBOX_PACKAGE_DEV_SCRIPT_RELATIVE_PATH =
     "Download/Operit/skills/SandboxPackage_DEV/scripts/install_or_update.js"
+private const val FORK_API_DEV_INSTALL_SCRIPT_URL =
+    "https://cdn.jsdelivr.net/gh/Karzzzzz520/operit-fork@main/tools/fork_api_dev_install_or_update.js"
+private const val FORK_API_DEV_SCRIPT_RELATIVE_PATH =
+    "Download/Operit/skills/ForkAPI_DEV/scripts/install_or_update.js"
 
+/** Installs or updates the upstream SandboxPackage_DEV skill. */
 internal fun runQuickPluginCreatorSetup(
     context: Context,
     packageManager: PackageManager,
     toolHandler: AIToolHandler
+): ToolResult =
+    runPluginSkillSetup(
+        context = context,
+        packageManager = packageManager,
+        toolHandler = toolHandler,
+        installScriptUrl = SANDBOX_PACKAGE_DEV_INSTALL_SCRIPT_URL,
+        scriptRelativePath = SANDBOX_PACKAGE_DEV_SCRIPT_RELATIVE_PATH,
+        successMessageRes = R.string.quick_plugin_creator_setup_success,
+        failureMessageRes = R.string.quick_plugin_creator_setup_failed
+    )
+
+/** Installs or updates the fork-only ForkAPI_DEV skill (OperitFork capabilities). */
+internal fun runForkApiDevSetup(
+    context: Context,
+    packageManager: PackageManager,
+    toolHandler: AIToolHandler
+): ToolResult =
+    runPluginSkillSetup(
+        context = context,
+        packageManager = packageManager,
+        toolHandler = toolHandler,
+        installScriptUrl = FORK_API_DEV_INSTALL_SCRIPT_URL,
+        scriptRelativePath = FORK_API_DEV_SCRIPT_RELATIVE_PATH,
+        successMessageRes = R.string.quick_plugin_creator_fork_setup_success,
+        failureMessageRes = R.string.quick_plugin_creator_fork_setup_failed
+    )
+
+private fun runPluginSkillSetup(
+    context: Context,
+    packageManager: PackageManager,
+    toolHandler: AIToolHandler,
+    installScriptUrl: String,
+    scriptRelativePath: String,
+    successMessageRes: Int,
+    failureMessageRes: Int
 ): ToolResult {
     return try {
-        val scriptFile = downloadSandboxPackageDevInstallScript()
+        val scriptFile = downloadInstallScript(installScriptUrl, scriptRelativePath)
         val enableMessage = packageManager.enablePackage(OPERIT_EDITOR_PACKAGE_NAME)
         if (enableMessage.startsWith("Package not found", ignoreCase = true)) {
             return ToolResult(
@@ -58,17 +98,17 @@ internal fun runQuickPluginCreatorSetup(
                 toolName = result.toolName,
                 success = false,
                 result = StringResultData(""),
-                error = result.error ?: context.getString(R.string.quick_plugin_creator_setup_failed)
+                error = result.error ?: context.getString(failureMessageRes)
             )
         } else {
             ToolResult(
                 toolName = result.toolName,
                 success = true,
-                result = StringResultData(context.getString(R.string.quick_plugin_creator_setup_success))
+                result = StringResultData(context.getString(successMessageRes))
             )
         }
     } catch (e: Exception) {
-        AppLogger.e("QuickPluginCreatorSetup", "Failed to run quick plugin creator setup", e)
+        AppLogger.e("QuickPluginCreatorSetup", "Failed to run plugin skill setup", e)
         ToolResult(
             toolName = "$OPERIT_EDITOR_PACKAGE_NAME:debug_run_sandbox_script",
             success = false,
@@ -78,13 +118,13 @@ internal fun runQuickPluginCreatorSetup(
     }
 }
 
-private fun downloadSandboxPackageDevInstallScript(): File {
+private fun downloadInstallScript(installScriptUrl: String, scriptRelativePath: String): File {
     val rootDir = Environment.getExternalStorageDirectory()
-    val scriptFile = File(rootDir, SANDBOX_PACKAGE_DEV_SCRIPT_RELATIVE_PATH)
+    val scriptFile = File(rootDir, scriptRelativePath)
     scriptFile.parentFile?.mkdirs()
 
     val connection =
-        (URL(SANDBOX_PACKAGE_DEV_INSTALL_SCRIPT_URL).openConnection() as HttpURLConnection).apply {
+        (URL(installScriptUrl).openConnection() as HttpURLConnection).apply {
             connectTimeout = 20_000
             readTimeout = 30_000
             doInput = true

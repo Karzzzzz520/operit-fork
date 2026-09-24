@@ -1045,6 +1045,11 @@
     <string name="quick_plugin_creator_pull_skill_update">拉取 Skill 更新</string>
     <string name="quick_plugin_creator_setup_success">包创作 Skill 安装或更新完成</string>
     <string name="quick_plugin_creator_setup_failed">包创作 Skill 安装或更新失败</string>
+    <string name="quick_plugin_creator_fork_step_title">Fork API 能力 Skill</string>
+    <string name="quick_plugin_creator_fork_step_desc">安装 operit-fork 专用 skill：OperitFork 宿主桥接能力文档与 fork-api.d.ts 类型声明。</string>
+    <string name="quick_plugin_creator_fork_run_setup">安装 Fork API Skill</string>
+    <string name="quick_plugin_creator_fork_setup_success">Fork API Skill 安装或更新完成</string>
+    <string name="quick_plugin_creator_fork_setup_failed">Fork API Skill 安装或更新失败</string>
     <string name="quick_plugin_creator_step2_title">2. 输入需求开始创作</string>
     <string name="quick_plugin_creator_requirement_hint">例如：做一个可以批量整理下载目录图片并生成索引的工具</string>
     <string name="quick_plugin_creator_requirement_empty">请先输入插件需求</string>

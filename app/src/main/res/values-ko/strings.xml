@@ -921,6 +921,11 @@
     <string name="quick_plugin_creator_pull_skill_update">스킬 업데이트 가져오기</string>
     <string name="quick_plugin_creator_setup_success">패키지 생성 스킬 설치 또는 업데이트 완료</string>
     <string name="quick_plugin_creator_setup_failed">패키지 생성 스킬을 설치하거나 업데이트하지 못했습니다.</string>
+    <string name="quick_plugin_creator_fork_step_title">Fork API 기능 스킬</string>
+    <string name="quick_plugin_creator_fork_step_desc">operit-fork 전용 스킬을 설치합니다: OperitFork 호스트 브리지 기능 문서와 fork-api.d.ts 타입 선언.</string>
+    <string name="quick_plugin_creator_fork_run_setup">Fork API 스킬 설치</string>
+    <string name="quick_plugin_creator_fork_setup_success">Fork API 스킬 설치 또는 업데이트 완료</string>
+    <string name="quick_plugin_creator_fork_setup_failed">Fork API 스킬 설치 또는 업데이트 실패</string>
     <string name="quick_plugin_creator_step2_title">2. 만들기를 시작하려면 요구사항을 입력하세요.</string>
     <string name="quick_plugin_creator_requirement_hint">예: 다운로드 디렉터리의 이미지를 일괄 구성하고 색인을 생성하는 도구를 만듭니다.</string>
     <string name="quick_plugin_creator_requirement_empty">먼저 플러그인 요구 사항을 입력하세요.</string>

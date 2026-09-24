@@ -1024,6 +1024,11 @@
     <string name="quick_plugin_creator_pull_skill_update">Trage Skill Actualizare</string>
     <string name="quick_plugin_creator_setup_success">Creație de pachete Skill Instalarea sau actualizarea s-a finalizat</string>
     <string name="quick_plugin_creator_setup_failed">Creație de pachete Skill Instalarea sau actualizarea a eșuat</string>
+    <string name="quick_plugin_creator_fork_step_title">Skill pentru capabilitățile Fork API</string>
+    <string name="quick_plugin_creator_fork_step_desc">Instalează skill-ul exclusiv operit-fork: documentația capabilităților de punte OperitFork și declarațiile de tip fork-api.d.ts.</string>
+    <string name="quick_plugin_creator_fork_run_setup">Instalează skill-ul Fork API</string>
+    <string name="quick_plugin_creator_fork_setup_success">Skill-ul Fork API a fost instalat sau actualizat</string>
+    <string name="quick_plugin_creator_fork_setup_failed">Instalarea sau actualizarea skill-ului Fork API a eșuat</string>
     <string name="quick_plugin_creator_step2_title">2. Introduceți cerințele pentru a începe creația</string>
     <string name="quick_plugin_creator_requirement_hint">De exemplu: crearea unui instrument care să poată organiza în bloc imaginile din directorul de descărcări și să genereze un index</string>
     <string name="quick_plugin_creator_requirement_empty">Vă rugăm să introduceți mai întâi cerințele privind pluginul</string>
