@@ -67,6 +67,8 @@ if (typeof OperitFork !== "undefined" && OperitFork.isAvailable()) {
 
 用 `assembleDebug` 构建预览版；运行时会在应用启动时初始化 `DeveloperApiRuntime`。
 已签名的 Release APK 由 `Android Build` 工作流以 `:app:assembleRelease` 发布。
+Release tag 采用 fork 方案 `fork-<官方版本>-f<N>`（例如 `fork-1.12.2-f1`）。
+不要使用上游的 `1.12.2+N` 构建元数据命名，那是官方发布方案，跟随官方版本时会冲突。
 
 ## Fork 专用 Skill
 

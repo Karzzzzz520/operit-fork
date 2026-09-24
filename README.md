@@ -71,6 +71,9 @@ installed alongside the release APK; use one or the other.
 
 Build the preview with `assembleDebug`. The runtime initializes `DeveloperApiRuntime` during application
 startup. Signed release APKs are published by the `Android Build` workflow with `:app:assembleRelease`.
+Release tags use the fork scheme `fork-<upstream-version>-f<N>` (for example `fork-1.12.2-f1`).
+Do not use upstream build-metadata tags such as `1.12.2+N`; that naming belongs to the upstream
+release scheme and collides when the fork follows upstream versions.
 
 ## Fork skill
 
