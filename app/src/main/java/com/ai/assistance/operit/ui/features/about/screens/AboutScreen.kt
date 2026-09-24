@@ -941,10 +941,10 @@ fun AboutScreen(
                     SettingsRow(
                         icon = Icons.Default.Language,
                         iconTint = MaterialTheme.colorScheme.secondary,
-                        title = stringResource(id = R.string.project_url),
-                        subtitleText = GITHUB_PROJECT_URL,
+                        title = stringResource(id = R.string.project_url_fork),
+                        subtitleText = FORK_PROJECT_URL,
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_PROJECT_URL)).apply {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(FORK_PROJECT_URL)).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
                             context.startActivity(intent)
@@ -954,11 +954,12 @@ fun AboutScreen(
                     HorizontalDivider(modifier = Modifier.padding(start = 66.dp))
 
                     SettingsRow(
-                        icon = Icons.Default.Star,
+                        icon = Icons.Default.Language,
                         iconTint = MaterialTheme.colorScheme.secondary,
-                        title = stringResource(id = R.string.star_on_github),
+                        title = stringResource(id = R.string.project_url_upstream),
+                        subtitleText = GITHUB_PROJECT_URL,
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(FORK_PROJECT_URL)).apply {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(GITHUB_PROJECT_URL)).apply {
                                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                             }
                             context.startActivity(intent)
