@@ -16,7 +16,7 @@
 
 ## 当前状态说明
 
-fork 宿主 API 目前落在 **Kotlin 契约层**。对应的 JS 侧（注入 ToolPkg JavaScript 运行时的 `OperitFork` 全局对象）与 `toolpkg.d.ts` 类型声明**尚未接通** —— 相关待办见 `docs/developer-api/`。这是进行中的工作，而非回退。
+fork 宿主 API 目前落在 **Kotlin 契约层**。对应的 JS 侧（注入 ToolPkg JavaScript 运行时的 `OperitFork` 全局对象）与类型声明**尚未接通** —— 相关待办见 `docs/developer-api/`。目标调用形状的预览声明见 `examples/types/fork-api.d.ts`。这是进行中的工作，而非回退。
 
 ## 开发者预览版构建
 
@@ -34,6 +34,7 @@ fork 宿主 API 目前落在 **Kotlin 契约层**。对应的 JS 侧（注入 To
 
 - `docs/developer-api/ROADMAP.md` —— 路线图
 - `docs/developer-api/ARCHITECTURE.md` —— 架构说明
+- `docs/developer-api/FORK_CAPABILITIES.md` —— Fork 能力参考（8 个宿主桥接能力与 `OperitFork` 调用形状）
 
 ## 许可证
 
