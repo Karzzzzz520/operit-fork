@@ -30,7 +30,8 @@ class ForkApiBridge(context: Context) {
     private val eventBus: DeveloperEventBus = InMemoryDeveloperEventBus()
     private val diagnostics: DeveloperDiagnostics = InMemoryDeveloperDiagnostics()
     private val oauth: OAuthBridge = InMemoryOAuthBridge()
-    private val modelConfigs: ModelConfigBridge = InMemoryModelConfigBridge()
+    // Real DataStore-backed implementation instead of the in-memory preview stub.
+    private val modelConfigs: ModelConfigBridge = RealModelConfigBridge(appContext, diagnostics)
     private val aiProviders: AiProviderBridge = InMemoryAiProviderBridge()
     private val lifecycle: PluginLifecycle = NoopPluginLifecycle()
     private val aiToolHandler: AIToolHandler by lazy { AIToolHandler.getInstance(appContext) }

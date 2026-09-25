@@ -64,6 +64,12 @@ const granted = await OperitFork.negotiate({
 - PluginLifecycle: onLoad / onEnable / onDisable / onUnload
 - DeveloperDiagnostics: record / query / clear
 
+### 实现状态
+
+- `modelConfig.*`：**真实实现**（`RealModelConfigBridge`），直接读写 `ModelConfigManager` 与 `model_configs` DataStore。创建/更新会落盘，在应用「模型配置」界面可见；默认配置 `default` 不可删（返回 `forbidden`）。每次写入会在 `developerDiagnostics` 记一条 info。
+- `aiProvider.register / unregister / list`：内存注册表；`aiProvider.execute` 仍返回 `not_implemented`（宿主 → 沙盒包回调链路待单独排期）。
+- 其余 capability 为开发者预览实现（内存权限、明文偏好存 Token 等）。
+
 ## 版本与权限
 
 - API 版本：DeveloperApiVersion(major, minor, patch)，包 manifest 请求 apiVersion，宿主 negotiate 返回实际授予的能力集。
