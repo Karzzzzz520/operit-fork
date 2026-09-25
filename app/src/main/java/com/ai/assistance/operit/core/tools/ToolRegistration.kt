@@ -279,7 +279,7 @@ fun registerAllTools(handler: AIToolHandler, context: Context) {
             }
     )
 
-    // 沙盒包热重载：由 agent 显式调用的内置工具
+    // 沙盒包按需刷新（非自动监听）：由 agent 显式调用的内置工具
     handler.registerTool(
             name = "reload_sandbox_packages",
             descriptionGenerator = { _ -> s(R.string.toolreg_reload_sandbox_packages_desc) },

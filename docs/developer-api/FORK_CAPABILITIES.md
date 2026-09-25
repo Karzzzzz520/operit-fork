@@ -81,14 +81,21 @@ const granted = await OperitFork.negotiate({
 | `OperitFork.host` | `getAppInfo()` | 包名 / versionName / versionCode |
 | `OperitFork.update` | `check(currentVersion?)` | 检查 fork 发布渠道 |
 
-### 沙盒包热重载（显式调用）
+### 沙盒包刷新（按需，非自动）
 
-热重载不再是常驻监听，而是两个按需入口：
+这是**显式触发**的刷新，不是常驻监听：放入新包后不会自动注册，必须调用一次刷新入口。
 
-- 内置工具 `reload_sandbox_packages`（由 agent 调用），执行 `PackageManager.refreshExternalPackagesForDebug()`；
-- `OperitFork.packages.reload()`，供沙盒包 / 脚本直接调用。
+主入口（agent 调用）：
 
-两者都会重新扫描 `getExternalFilesDir/packages` 并重载已启用的包，无需重启应用。
+- 内置工具 `reload_sandbox_packages`，执行 `PackageManager.refreshExternalPackagesForDebug()`。
+
+薄封装（沙盒包 / 脚本调用）：
+
+- `OperitFork.packages.reload()`，内部调用同一个刷新动作，行为与内置工具完全一致。
+
+刷新动作会重新扫描 `getExternalFilesDir/packages`、销毁旧执行引擎、重注册并重新激活活跃包，无需重启应用。
+
+上游原有的广播通路保持不变：`PackageDebugRefreshReceiver`（action = `com.ai.assistance.operit.DEBUG_REFRESH_PACKAGES`）仍可由工具链触发。
 
 ## 相关文档
 
