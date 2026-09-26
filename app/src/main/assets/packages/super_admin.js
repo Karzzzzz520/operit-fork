@@ -99,6 +99,12 @@ METADATA
                     "type": "string",
                     "required": true
                 }
+                            {
+                    "name": "timeout",
+                    "description": { "zh": "超时（毫秒，最低3000ms，默认15000）。强烈建议显式传入，避免命令卡死。", "en": "Timeout in ms (min 3000, default 15000). Strongly recommended to avoid hangs." },
+                    "type": "number",
+                    "required": false
+                },
             ]
         }
     ]
@@ -108,6 +114,7 @@ const superAdmin = (function () {
     const DEFAULT_FOREGROUND_TIMEOUT_MS = 15000;
     const DEFAULT_WAIT_TIMEOUT_MS = 300000;
     const MIN_TIMEOUT_MS = 3000;
+    const DEFAULT_SHELL_TIMEOUT_MS = 15000;
     const DEFAULT_TERMINAL_SESSION_NAME = "super_admin_default_session";
     const BACKGROUND_TERMINAL_SESSION_PREFIX = "super_admin_background";
     function getCurrentChatSessionSuffix() {
@@ -298,14 +305,31 @@ const superAdmin = (function () {
             if (!params.command) {
                 throw new Error("命令不能为空");
             }
-            const command = params.command;
+            const command = String(params.command);
+            const shellTimeout = params.timeout !== undefined
+                ? parseInt(params.timeout, 10)
+                : DEFAULT_SHELL_TIMEOUT_MS;
+            if (!Number.isFinite(shellTimeout) || shellTimeout < MIN_TIMEOUT_MS) {
+                throw new Error(`timeout必须是整数且不少于${MIN_TIMEOUT_MS}毫秒`);
+            }
             console.log(`执行Shell命令: ${command}`);
-            // 通过Shizuku/Root权限执行shell操作
-            const result = await Tools.System.shell(`${command}`);
+            // 走已验证通道 Tools.System.shell（大写 S），并带超时，避免命令卡死
+            const raw = await Tools.System.shell(command, shellTimeout);
+            let output = "";
+            let exitCode;
+            if (raw == null) {
+                output = "";
+            } else if (typeof raw === "string") {
+                output = raw;
+            } else {
+                output = String(raw.output ?? raw.stdout ?? "");
+                exitCode = raw.exitCode;
+            }
             return {
                 command: command,
-                output: result.output,
-                exitCode: result.exitCode
+                output: output,
+                exitCode: exitCode,
+                timeoutMsUsed: shellTimeout
             };
         }
         catch (error) {
