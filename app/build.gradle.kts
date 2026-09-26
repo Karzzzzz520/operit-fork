@@ -149,22 +149,22 @@ fun signApkWithRotation(apkFile: File) {
 
 val requiredExternallyBuiltNativeLibraries =
     listOf(
-        file("src/main/jniLibs/arm64-v8a/liboperit_ripgrep.so"),
+        file("src/main/jniLibs/armeabi-v7a/liboperit_ripgrep.so"),
     )
 
 val ffmpegKitLocalAar = file("libs/ffmpeg-kit-local.aar")
-val requiredFfmpegKitArm64Libraries =
+val requiredFfmpegKitArmeabiV7aLibraries =
     setOf(
-        "jni/arm64-v8a/libavcodec.so",
-        "jni/arm64-v8a/libavdevice.so",
-        "jni/arm64-v8a/libavfilter.so",
-        "jni/arm64-v8a/libavformat.so",
-        "jni/arm64-v8a/libavutil.so",
-        "jni/arm64-v8a/libc++_shared.so",
-        "jni/arm64-v8a/libffmpegkit.so",
-        "jni/arm64-v8a/libffmpegkit_abidetect.so",
-        "jni/arm64-v8a/libswresample.so",
-        "jni/arm64-v8a/libswscale.so",
+        "jni/armeabi-v7a/libavcodec.so",
+        "jni/armeabi-v7a/libavdevice.so",
+        "jni/armeabi-v7a/libavfilter.so",
+        "jni/armeabi-v7a/libavformat.so",
+        "jni/armeabi-v7a/libavutil.so",
+        "jni/armeabi-v7a/libc++_shared.so",
+        "jni/armeabi-v7a/libffmpegkit.so",
+        "jni/armeabi-v7a/libffmpegkit_abidetect.so",
+        "jni/armeabi-v7a/libswresample.so",
+        "jni/armeabi-v7a/libswscale.so",
     )
 
 val verifyExternallyBuiltNativeLibraries by tasks.registering {
@@ -175,7 +175,7 @@ val verifyExternallyBuiltNativeLibraries by tasks.registering {
         requiredExternallyBuiltNativeLibraries.map { library -> library.path },
     )
     inputs.property("ffmpegKitAar", ffmpegKitLocalAar.path)
-    inputs.property("ffmpegKitArm64Libraries", requiredFfmpegKitArm64Libraries)
+    inputs.property("ffmpegKitArmeabiV7aLibraries", requiredFfmpegKitArmeabiV7aLibraries)
     outputs.upToDateWhen { false }
 
     doLast {
@@ -197,12 +197,12 @@ val verifyExternallyBuiltNativeLibraries by tasks.registering {
 
         ZipFile(ffmpegKitLocalAar).use { archive ->
             val invalidEntries =
-                requiredFfmpegKitArm64Libraries.filter { entryName ->
+                requiredFfmpegKitArmeabiV7aLibraries.filter { entryName ->
                     val entry = archive.getEntry(entryName)
                     entry == null || entry.size <= 0L
                 }
             require(invalidEntries.isEmpty()) {
-                "FFmpegKit AAR is missing or contains empty arm64 native libraries: " +
+                "FFmpegKit AAR is missing or contains empty armeabi-v7a native libraries: " +
                     invalidEntries.joinToString()
             }
         }
