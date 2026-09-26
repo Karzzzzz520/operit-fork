@@ -124,7 +124,7 @@ jobs:
         with:
           path: |
             **/.cxx/operit_deps/*-src
-          key: android-cmake-sources-${{ runner.os }}-${{ runner.arch }}-arm64-v8a-ndk-${{ env.ANDROID_NDK_VERSION }}-cmake-${{ env.ANDROID_CMAKE_VERSION }}-${{ hashFiles('cmake/**', '**/CMakeLists.txt', '**/*.cmake', '**/build.gradle.kts', 'gradle.properties') }}
+          key: android-cmake-sources-${{ runner.os }}-${{ runner.arch }}-armeabi-v7a-ndk-${{ env.ANDROID_NDK_VERSION }}-cmake-${{ env.ANDROID_CMAKE_VERSION }}-${{ hashFiles('cmake/**', '**/CMakeLists.txt', '**/*.cmake', '**/build.gradle.kts', 'gradle.properties') }}
 
       - name: Restore Android dependency cache
         id: cache-manual-deps
@@ -157,25 +157,25 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             tools/native_ripgrep/target
-          key: native-ripgrep-arm64-${{ runner.os }}-${{ runner.arch }}-ndk-${{ env.ANDROID_NDK_VERSION }}-api-${{ env.ANDROID_API_LEVEL }}-rust-${{ env.RUST_VERSION }}-${{ hashFiles('tools/native_ripgrep/Cargo.toml', 'tools/native_ripgrep/Cargo.lock', 'tools/native_ripgrep/**/*.rs', 'tools/native_ripgrep/build_native_ripgrep.ps1') }}
+          key: native-ripgrep-armeabi-v7a-${{ runner.os }}-${{ runner.arch }}-ndk-${{ env.ANDROID_NDK_VERSION }}-api-${{ env.ANDROID_API_LEVEL }}-rust-${{ env.RUST_VERSION }}-${{ hashFiles('tools/native_ripgrep/Cargo.toml', 'tools/native_ripgrep/Cargo.lock', 'tools/native_ripgrep/**/*.rs', 'tools/native_ripgrep/build_native_ripgrep.ps1') }}
 
       - name: Build native ripgrep
         shell: bash
         run: |
           set -euo pipefail
           export ANDROID_NDK_HOME="$ANDROID_HOME/ndk/$ANDROID_NDK_VERSION"
-          export CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android${ANDROID_API_LEVEL}-clang"
+          export CARGO_TARGET_ARMV7_LINUX_ANDROIDEABI_LINKER="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin/armv7a-linux-androideabi${ANDROID_API_LEVEL}-clang"
           rustup toolchain install "$RUST_VERSION" --profile minimal
-          rustup target add --toolchain "$RUST_VERSION" aarch64-linux-android
+          rustup target add --toolchain "$RUST_VERSION" armv7-linux-androideabi
           cargo "+$RUST_VERSION" build \
             --manifest-path tools/native_ripgrep/Cargo.toml \
             --release \
-            --target aarch64-linux-android \
+            --target armv7-linux-androideabi \
             --locked
           install -Dm755 \
-            tools/native_ripgrep/target/aarch64-linux-android/release/liboperit_ripgrep.so \
-            app/src/main/jniLibs/arm64-v8a/liboperit_ripgrep.so
-          test -s app/src/main/jniLibs/arm64-v8a/liboperit_ripgrep.so
+            tools/native_ripgrep/target/armv7-linux-androideabi/release/liboperit_ripgrep.so \
+            app/src/main/jniLibs/armeabi-v7a/liboperit_ripgrep.so
+          test -s app/src/main/jniLibs/armeabi-v7a/liboperit_ripgrep.so
 
       - name: Install JavaScript dependencies
         shell: bash
@@ -199,6 +199,18 @@ jobs:
         run: |
           set -euo pipefail
           echo "sdk.dir=$ANDROID_HOME" > local.properties
+
+      - name: Inspect native dependency ABI coverage
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          echo '=== app/src/main/jniLibs tree ==='
+          find app/src/main/jniLibs -type f | sort
+          echo '=== app/libs ==='
+          ls -la app/libs | head -30
+          echo '=== ffmpeg-kit-local.aar jni entries ==='
+          unzip -l app/libs/ffmpeg-kit-local.aar 2>/dev/null | grep -E 'jni/' | head -40
 
       - name: Run Gradle build
         env:
