@@ -566,9 +566,8 @@ fun resolveAppVersionCompatibility(
     minSupportedAppVersion: String?,
     maxSupportedAppVersion: String?
 ): MarketAppVersionCompatibility? {
-    val current = requireNotNull(parseAppVersionOrNull(appVersion)) {
-        "Current app version must use x.y.z or x.y.z+n format"
-    }
+    // 当前 App 版本无法解析时视为「无版本约束」，而不是抛异常炸掉整个市场页
+    val current = parseAppVersionOrNull(appVersion) ?: return null
     val minimum = parseAppVersionOrNull(minSupportedAppVersion)
     if (minimum != null && compareAppVersions(current.toString(), minimum.toString()) < 0) {
         return MarketAppVersionCompatibility(
@@ -641,9 +640,12 @@ private fun parseAppVersionOrNull(value: String?): AppVersion? {
     val normalized = value?.trim().orEmpty()
     if (normalized.isBlank()) return null
 
+    // 容错：剥离 fork / 预发布后缀（如 1.12.2-f1、1.13.0-rc1），只匹配 x.y.z(+n) 主体；
+    // 本函数名为 OrNull，解析失败须返回 null，绝不能抛异常（市场列表在 Compose 项里调用，无 try/catch）。
+    val core = normalized.substringBefore('-').trim()
     val match =
-        APP_VERSION_REGEX.matchEntire(normalized)
-            ?: throw IllegalArgumentException("App version must use x.y.z or x.y.z+n format")
+        APP_VERSION_REGEX.matchEntire(core)
+            ?: return null
 
     return AppVersion(
         major = match.groupValues[1].toInt(),
