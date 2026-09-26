@@ -17,7 +17,7 @@ android {
         consumerProguardFiles("consumer-rules.pro")
 
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a"))
+            abiFilters.addAll(listOf("armeabi-v7a"))
         }
 
         externalNativeBuild {
