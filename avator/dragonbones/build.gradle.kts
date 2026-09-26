@@ -14,7 +14,7 @@ android {
         minSdk = 26
 
         ndk {
-            abiFilters.addAll(listOf("arm64-v8a"))
+            abiFilters.addAll(listOf("armeabi-v7a"))
         }
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
