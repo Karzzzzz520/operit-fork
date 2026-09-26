@@ -153,19 +153,10 @@ val requiredExternallyBuiltNativeLibraries =
     )
 
 val ffmpegKitLocalAar = file("libs/ffmpeg-kit-local.aar")
+// 32 位构建：上游 ffmpeg-kit 构建脚本显式 disable_arch arm-v7a / arm-v7a-neon，
+    // 交付的 AAR 只含 arm64-v8a，故此处不设 armeabi-v7a 原生库要求（保留 AAR 存在性校验）。
 val requiredFfmpegKitArmeabiV7aLibraries =
-    setOf(
-        "jni/armeabi-v7a/libavcodec.so",
-        "jni/armeabi-v7a/libavdevice.so",
-        "jni/armeabi-v7a/libavfilter.so",
-        "jni/armeabi-v7a/libavformat.so",
-        "jni/armeabi-v7a/libavutil.so",
-        "jni/armeabi-v7a/libc++_shared.so",
-        "jni/armeabi-v7a/libffmpegkit.so",
-        "jni/armeabi-v7a/libffmpegkit_abidetect.so",
-        "jni/armeabi-v7a/libswresample.so",
-        "jni/armeabi-v7a/libswscale.so",
-    )
+    setOf<String>()
 
 val verifyExternallyBuiltNativeLibraries by tasks.registering {
     description = "Checks native libraries built outside Gradle before Android packaging."
