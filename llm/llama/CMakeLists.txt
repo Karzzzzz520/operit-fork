@@ -9,6 +9,11 @@ set(LLAMA_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_TOOLS OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(LLAMA_BUILD_SERVER OFF CACHE BOOL "" FORCE)
+# armeabi-v7a 没有 armv8 FP16 向量指令集（__ARM_FP16_VECTOR_ARITHMETIC），
+# ggml-cpu/llamafile 的 fp16 内联汇编在该 ABI 上无法编译，故强制关闭 fp16 快速路径。
+if(CMAKE_ANDROID_ARCH_ABI STREQUAL "armeabi-v7a")
+    set(GGML_HAS_FP16 0 CACHE INT "" FORCE)
+endif()
 
 operit_prepare_git_source(
     OPERIT_LLAMA_CPP_SOURCE_DIR
