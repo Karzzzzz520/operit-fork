@@ -407,7 +407,7 @@ android {
         
         ndk {
             // Keep native compilation aligned with the app's only supported ABI.
-            abiFilters.addAll(listOf("arm64-v8a"))
+            abiFilters.addAll(listOf("armeabi-v7a"))
         }
 
         externalNativeBuild {
