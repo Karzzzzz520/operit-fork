@@ -25,7 +25,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags += listOf("-std=c++17", "-fno-emulated-tls")
+                cppFlags += listOf("-std=c++17")
                 arguments += listOf(
                     "-DANDROID_STL=c++_static",
                     "-DANDROID_PLATFORM=android-26",
