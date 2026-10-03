@@ -523,7 +523,8 @@ private data class AttachmentPanelItem(
 private enum class AttachmentPackageKind {
     PACKAGE,
     SKILL,
-    MCP
+    MCP,
+    TOOLPKG
 }
 
 private data class AttachmentPackageOption(
@@ -811,7 +812,9 @@ private fun buildAttachmentPackageOptions(
     val options = linkedMapOf<String, AttachmentPackageOption>()
 
     packageManager.getAvailablePackages().toSortedMap().forEach { (packageName, toolPackage) ->
-        if (packageManager.isToolPkgContainer(packageName)) {
+        val isToolPkgContainer = packageManager.isToolPkgContainer(packageName)
+        // ToolPkg 只列容器本身（一行代表整包）；其子包不再单独列出，避免重复
+        if (!isToolPkgContainer && packageManager.isToolPkgSubpackage(packageName)) {
             return@forEach
         }
         options.putIfAbsent(
@@ -820,7 +823,9 @@ private fun buildAttachmentPackageOptions(
                         packageName = packageName,
                         title = toolPackage.displayName.resolve(context).ifBlank { packageName },
                         description = toolPackage.description.resolve(context),
-                        kind = AttachmentPackageKind.PACKAGE
+                        kind =
+                                if (isToolPkgContainer) AttachmentPackageKind.TOOLPKG
+                                else AttachmentPackageKind.PACKAGE
                 )
         )
     }
@@ -858,6 +863,7 @@ private fun buildAttachmentPackageSubtitle(option: AttachmentPackageOption): Str
                 AttachmentPackageKind.PACKAGE -> "包"
                 AttachmentPackageKind.SKILL -> "技能"
                 AttachmentPackageKind.MCP -> "MCP"
+                AttachmentPackageKind.TOOLPKG -> "ToolPkg"
             }
     return if (option.description.isBlank()) {
         typeLabel

@@ -1272,7 +1272,15 @@ private constructor(private val context: Context, private val aiToolHandler: AIT
                     fileName = fileName,
                     sourcePath = assetPath,
                     loadJs = { onError -> loadPackageFromJsAsset(assetPath, onError)?.copy(isBuiltIn = true) },
-                    loadToolPkg = { onError -> loadToolPkgFromAsset(assetPath, onError) }
+                    loadToolPkg = { onError ->
+                        loadToolPkgFromAsset(assetPath, onError)?.let { result ->
+                            result.copy(
+                                containerPackage = result.containerPackage.copy(isBuiltIn = true),
+                                subpackagePackages =
+                                    result.subpackagePackages.map { it.copy(isBuiltIn = true) }
+                            )
+                        }
+                    }
                 )
             }
         return scanPackageCandidates(phase = "asset", candidates = candidates)
@@ -3249,7 +3257,7 @@ private constructor(private val context: Context, private val aiToolHandler: AIT
 
         val containerRuntime = toolPkgContainers[normalizedPackageName]
         if (containerRuntime != null) {
-            return "ToolPkg container '$normalizedPackageName' is not a package and cannot be activated."
+            return useToolPkgContainer(normalizedPackageName, containerRuntime)
         }
 
         // First check if packageName is a standard enabled package (priority)
@@ -3367,6 +3375,71 @@ private constructor(private val context: Context, private val aiToolHandler: AIT
         return "Package not found: $normalizedPackageName. Please import it first or register it as an MCP server."
     }
 
+    /**
+     * 激活一个 ToolPkg 容器：把该容器下所有「已启用子包」的工具注册进来，并聚合成一份提示词文本。
+     *
+     * 容器本身不是包、没有独立工具，所以此前 usePackage/use_package 一律拒绝它。
+     * 这里改为按子包聚合，使 @ 引用、附加包、use_package 三个入口都能用容器名引用整个 ToolPkg。
+     */
+    private fun useToolPkgContainer(
+        containerPackageName: String,
+        container: ToolPkgContainerRuntime
+    ): String {
+        val enabledPackageNames = getEnabledPackageNames()
+        if (!enabledPackageNames.contains(containerPackageName)) {
+            return "ToolPkg container '$containerPackageName' is not enabled. Please enable it first."
+        }
+
+        val subpackageStates = getToolPkgSubpackageStatesInternal()
+        val sb = StringBuilder()
+        sb.appendLine("Using package: $containerPackageName")
+        sb.appendLine(
+            "Display name: ${
+                container.displayName.resolve(context).ifBlank { containerPackageName }
+            }"
+        )
+        sb.appendLine("Use Time: ${java.time.LocalDateTime.now()}")
+        sb.appendLine("Description: ${container.description.resolve(context)}")
+        sb.appendLine("Kind: ToolPkg container (tools aggregated from its enabled subpackages)")
+        sb.appendLine()
+        sb.appendLine("Available tools in this package:")
+
+        var activatedSubpackages = 0
+        var toolCount = 0
+        container.subpackages.forEach { subpackage ->
+            val subpackageName = subpackage.packageName.trim()
+            if (subpackageName.isEmpty()) return@forEach
+            // 子包被显式关闭则跳过；状态缺失时按启用处理（与包内 enabled_by_default 一致）
+            if (subpackageStates[subpackageName] == false) return@forEach
+
+            val subpackageTools = getPackageTools(subpackageName) ?: return@forEach
+            val selectedPackage = selectToolPackageState(subpackageTools)
+            registerPackageTools(selectedPackage)
+
+            activatedSubpackages += 1
+            toolCount += selectedPackage.tools.size
+            sb.appendLine()
+            sb.appendLine(generatePackageSystemPrompt(selectedPackage).trimEnd())
+        }
+
+        if (activatedSubpackages == 0) {
+            return "ToolPkg container '$containerPackageName' has no enabled subpackage. " +
+                "Please enable at least one subpackage before using it."
+        }
+
+        sb.appendLine()
+        sb.appendLine(
+            "Activated $activatedSubpackages subpackage(s) and $toolCount tool(s) " +
+                "from ToolPkg '$containerPackageName'."
+        )
+        AppLogger.d(
+            TAG,
+            "Activated ToolPkg container: $containerPackageName " +
+                "(subpackages=$activatedSubpackages, tools=$toolCount)"
+        )
+        return sb.toString()
+    }
+
     fun getActivePackageStateId(packageName: String): String? {
         ensureInitialized()
         val normalizedPackageName = normalizePackageName(packageName)
@@ -3389,11 +3462,18 @@ private constructor(private val context: Context, private val aiToolHandler: AIT
 
         val normalizedPackageName = normalizePackageName(packageName)
         if (isToolPkgContainer(normalizedPackageName)) {
+            if (!getEnabledPackageNames().contains(normalizedPackageName)) {
+                return ToolResult(
+                    toolName = toolName,
+                    success = false,
+                    result = StringResultData(""),
+                    error = "ToolPkg container '$normalizedPackageName' is not enabled. Please enable it first."
+                )
+            }
             return ToolResult(
                 toolName = toolName,
-                success = false,
-                result = StringResultData(""),
-                error = "ToolPkg container '$normalizedPackageName' is not a package and cannot be activated."
+                success = true,
+                result = StringResultData(usePackage(normalizedPackageName))
             )
         }
 
