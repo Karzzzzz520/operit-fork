@@ -41,3 +41,7 @@ worldbook
 qqbot
 thinking_guidance
 plan_mode
+net_probe.js
+host_probe.js
+resource_search.js
+sandbox_scanner.toolpkg
