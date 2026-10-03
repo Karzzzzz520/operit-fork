@@ -82,6 +82,7 @@ private enum class MentionPackageKind {
     PACKAGE,
     SKILL,
     MCP,
+    TOOLPKG,
 }
 
 private data class MentionPackageSuggestion(
@@ -518,6 +519,7 @@ private fun mentionPackageColor(
         MentionPackageKind.PACKAGE -> colors.primary
         MentionPackageKind.SKILL -> colors.secondary
         MentionPackageKind.MCP -> colors.tertiary
+        MentionPackageKind.TOOLPKG -> colors.primary
     }
 }
 
@@ -566,7 +568,9 @@ private fun buildMentionPackageOptions(
     val options = linkedMapOf<String, MentionPackageSuggestion>()
 
     packageManager.getAvailablePackages().toSortedMap().forEach { (packageName, toolPackage) ->
-        if (packageManager.isToolPkgContainer(packageName)) {
+        val isToolPkgContainer = packageManager.isToolPkgContainer(packageName)
+        // ToolPkg 只列容器本身（一行代表整包）；其子包不再单独列出，避免重复
+        if (!isToolPkgContainer && packageManager.isToolPkgSubpackage(packageName)) {
             return@forEach
         }
 
@@ -576,7 +580,9 @@ private fun buildMentionPackageOptions(
                 packageName = packageName,
                 title = toolPackage.displayName.resolve(context).ifBlank { packageName },
                 description = toolPackage.description.resolve(context),
-                kind = MentionPackageKind.PACKAGE,
+                kind =
+                    if (isToolPkgContainer) MentionPackageKind.TOOLPKG
+                    else MentionPackageKind.PACKAGE,
             ),
         )
     }
@@ -614,6 +620,7 @@ private fun buildMentionPackageSubtitle(suggestion: MentionPackageSuggestion): S
             MentionPackageKind.PACKAGE -> "工具包"
             MentionPackageKind.SKILL -> "Skill 包"
             MentionPackageKind.MCP -> "MCP 包"
+            MentionPackageKind.TOOLPKG -> "ToolPkg 包"
         }
 
     val metaParts = buildList {

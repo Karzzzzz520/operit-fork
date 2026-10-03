@@ -74,8 +74,18 @@ fun EnhancedCodeBlock(code: String, language: String = "", modifier: Modifier = 
     // Mermaid渲染状态
     var showRenderedMermaid by remember { mutableStateOf(false) }
 
-    // HTML预览状态
-    var showRenderedHtml by remember { mutableStateOf(false) }
+    // HTML预览状态：html/htm 代码块默认自动进入预览（流式渲染期间先显示源码）
+    var showRenderedHtml by remember(isHtml) { mutableStateOf(isHtml) }
+
+    // 用户是否手动切换过 HTML 预览；手动切换后不再被自动策略覆盖
+    var htmlPreviewTouched by remember(isHtml) { mutableStateOf(false) }
+
+    // 流式渲染结束后自动切回预览（仅在用户未手动干预时）
+    LaunchedEffect(preferStreamingBody, isHtml) {
+        if (isHtml && !htmlPreviewTouched) {
+            showRenderedHtml = !preferStreamingBody
+        }
+    }
 
     var showFullscreenPreview by remember { mutableStateOf(false) }
     var fullscreenPreviewType by remember { mutableStateOf<CodeBlockPreviewType?>(null) }
@@ -85,7 +95,9 @@ fun EnhancedCodeBlock(code: String, language: String = "", modifier: Modifier = 
         (configuration.screenHeightDp.dp * 0.5f).coerceIn(240.dp, 560.dp)
     }
 
-    val isPreviewMode = (isMermaid && showRenderedMermaid) || (isHtml && showRenderedHtml)
+    // 流式渲染期间不进入预览，避免反复重建 WebView
+    val htmlPreviewActive = isHtml && showRenderedHtml && !preferStreamingBody
+    val isPreviewMode = (isMermaid && showRenderedMermaid) || htmlPreviewActive
 
     // 处理复制事件
     val handleCopy: () -> Unit = {
@@ -100,8 +112,11 @@ fun EnhancedCodeBlock(code: String, language: String = "", modifier: Modifier = 
     // 处理Mermaid渲染切换
     val handleToggleMermaid: () -> Unit = { showRenderedMermaid = !showRenderedMermaid }
 
-    // 处理HTML预览切换
-    val handleToggleHtml: () -> Unit = { showRenderedHtml = !showRenderedHtml }
+    // 处理HTML预览切换（记录用户意图，之后不再被自动策略覆盖）
+    val handleToggleHtml: () -> Unit = {
+        htmlPreviewTouched = true
+        showRenderedHtml = !showRenderedHtml
+    }
 
     // 暗色代码块背景颜色
     val codeBlockBackground = Color(0xFF1E1E1E) // VS Code 暗色主题背景色
@@ -268,7 +283,7 @@ fun EnhancedCodeBlock(code: String, language: String = "", modifier: Modifier = 
                 MermaidRenderer(code = code, modifier = Modifier
                     .fillMaxWidth()
                     .height(300.dp))
-            } else if (isHtml && showRenderedHtml) {
+            } else if (htmlPreviewActive) {
                 HtmlPreviewRenderer(
                     code = code,
                     modifier = Modifier
@@ -677,11 +692,78 @@ fun MermaidRenderer(code: String, modifier: Modifier = Modifier) {
     )
 }
 
+/**
+ * HTML 预览的宽度兜底样式：把宽内容约束在视口内，必要时横向滚动，
+ * 而不是直接溢出到屏幕外被裁掉（宽表格 / 固定宽页面 / 超长单行是重灾区）。
+ */
+private const val HTML_PREVIEW_WIDTH_FIT_CSS =
+    """
+    html, body {
+        margin: 0;
+        padding: 8px;
+        max-width: 100%;
+        overflow-x: auto;
+        word-wrap: break-word;
+    }
+    * { box-sizing: border-box; }
+    img, video, canvas, svg, iframe {
+        max-width: 100% !important;
+        height: auto !important;
+    }
+    table {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        overflow-x: auto;
+        border-collapse: collapse;
+    }
+    pre, code {
+        max-width: 100%;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-break: break-word;
+    }
+    """
+
+/**
+ * 把 ```html 代码块内容包装为「宽度自适应」的完整文档：
+ * 1. 缺少 viewport 声明时补 `width=device-width`
+ * 2. 注入兜底 CSS，约束宽表格 / 宽媒体 / 长行
+ * 3. 片段（无 html/head）整体包一层文档，保证样式一定生效
+ */
+private fun buildWidthFitHtmlDocument(rawHtml: String): String {
+    val headInjection =
+        buildString {
+            if (!rawHtml.contains("viewport", ignoreCase = true)) {
+                append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">")
+            }
+            append("<style>")
+            append(HTML_PREVIEW_WIDTH_FIT_CSS)
+            append("</style>")
+        }
+
+    val headCloseRegex = Regex("(?i)</head>")
+    val headOpenRegex = Regex("(?i)<head[^>]*>")
+    val htmlOpenRegex = Regex("(?i)<html[^>]*>")
+
+    headCloseRegex.find(rawHtml)?.let { match ->
+        return headCloseRegex.replaceFirst(rawHtml, headInjection + match.value)
+    }
+    headOpenRegex.find(rawHtml)?.let { match ->
+        return headOpenRegex.replaceFirst(rawHtml, match.value + headInjection)
+    }
+    htmlOpenRegex.find(rawHtml)?.let { match ->
+        return htmlOpenRegex.replaceFirst(rawHtml, match.value + "<head>" + headInjection + "</head>")
+    }
+    return "<!DOCTYPE html><html><head>" + headInjection + "</head><body>" + rawHtml + "</body></html>"
+}
+
 @Composable
 fun HtmlPreviewRenderer(code: String, modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    val htmlContent = remember(code) { code.trim() }
+    // 宽度自适应：注入 viewport + 兜底 CSS，避免宽表格 / 固定宽页面溢出看不全
+    val htmlContent = remember(code) { buildWidthFitHtmlDocument(code.trim()) }
 
     val webView = remember {
         WebView(context).apply {
@@ -689,7 +771,8 @@ fun HtmlPreviewRenderer(code: String, modifier: Modifier = Modifier) {
             settings.domStorageEnabled = false
             settings.allowFileAccess = false
             settings.allowContentAccess = false
-            settings.loadWithOverviewMode = true
+            // 不再整页缩放到「全览但看不清」；按 device-width 排版，超宽内容横向滚动
+            settings.loadWithOverviewMode = false
             settings.useWideViewPort = true
 
             webViewClient =

@@ -351,9 +351,8 @@ class AttachmentDelegate(private val context: Context, private val toolHandler: 
         }
 
         val packageManager = PackageManager.getInstance(context, toolHandler)
-        val isStandardPackage =
-            packageManager.getAvailablePackages().containsKey(packageName) &&
-                !packageManager.isToolPkgContainer(packageName)
+        // ToolPkg 容器同样可以附加：usePackage 会把其「已启用子包」的工具聚合进来
+        val isStandardPackage = packageManager.getAvailablePackages().containsKey(packageName)
         val isSkillPackage =
             SkillRepository.getInstance(context.applicationContext).getAiVisibleSkillPackages().containsKey(packageName)
         val isMcpPackage = packageManager.getAvailableServerPackages().containsKey(packageName)
