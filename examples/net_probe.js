@@ -13,7 +13,7 @@ METADATA
             "parameters": [
                 { "name": "method", "description": { "zh": "HTTP 方法，如 GET/POST/PUT/DELETE", "en": "HTTP method." }, "type": "string", "required": true },
                 { "name": "url", "description": { "zh": "完整 URL", "en": "Full URL." }, "type": "string", "required": true },
-                { "name": "headers_json", "description": { "zh": "请求头 JSON 字符串，如 {"Content-Type":"application/json"}", "en": "Headers as a JSON string." }, "type": "string", "required": false },
+                { "name": "headers_json", "description": { "zh": "请求头 JSON 字符串，如 {\"Content-Type\":\"application/json\"}", "en": "Headers as a JSON string." }, "type": "string", "required": false },
                 { "name": "body", "description": { "zh": "请求体字符串", "en": "Request body string." }, "type": "string", "required": false },
                 { "name": "timeout_ms", "description": { "zh": "超时（毫秒，最低3000ms，默认30000）", "en": "Timeout in ms (min 3000, default 30000)." }, "type": "number", "required": false }
             ]
